@@ -39,13 +39,18 @@ func TestWildFlyServer(t *testing.T) {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}
 	// run subtests
-	t.Run("wildflyserver-group", func(t *testing.T) {
-		t.Run("WildFlyBasicTest", WildFlyBasicTest)
-		t.Run("WildFlyClusterTest", WildFlyClusterTest)
+	t.Run("WildFlyServer", func(t *testing.T) {
+		t.Run("WildFly17", func(t *testing.T) {
+			t.Run("BasicTest", WildFly17BasicTest)
+		})
+		t.Run("WildFly16", func(t *testing.T) {
+			t.Run("BasicTest", WildFly16BasicTest)
+			t.Run("ClusterTest", WildFlyClusterTest)
+		})
 	})
 }
 
-func wildflyBasicServerScaleTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
+func wildflyBasicServerScaleTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx, applicationTag string) error {
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace: %v", err)
@@ -53,22 +58,27 @@ func wildflyBasicServerScaleTest(t *testing.T, f *framework.Framework, ctx *fram
 
 	name := "example-wildfly"
 	// create wildflyserver custom resource
-	wildflyServer := wildflyframework.MakeBasicWildFlyServer(namespace, name, "quay.io/jmesnil/wildfly-operator-quickstart:16.0", 2)
+	wildflyServer := wildflyframework.MakeBasicWildFlyServer(namespace, name, "quay.io/jmesnil/wildfly-operator-quickstart:"+applicationTag, 1)
 	err = wildflyframework.CreateAndWaitUntilReady(f, ctx, t, wildflyServer)
 	if err != nil {
 		return err
 	}
 
-	// update the size to 3
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, wildflyServer)
+	fmt.Printf("Application %s is deployed with %d instance\n", name, 1)
+
+	context := goctx.TODO()
+
+	// update the size to 2
+	err = f.Client.Get(context, types.NamespacedName{Name: name, Namespace: namespace}, wildflyServer)
 	if err != nil {
 		return err
 	}
-	wildflyServer.Spec.Size = 3
-	err = f.Client.Update(goctx.TODO(), wildflyServer)
+	wildflyServer.Spec.Size = 2
+	err = f.Client.Update(context, wildflyServer)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Updated aplication %s size to %d\n", name, wildflyServer.Spec.Size)
 
 	// check that the resource have been updated
 	return wildflyframework.WaitUntilReady(f, t, wildflyServer)
@@ -106,6 +116,7 @@ func wildflyClusterViewTest(t *testing.T, f *framework.Framework, ctx *framework
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 	}
+
 	err = f.Client.Create(goctx.TODO(), roleBinding, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		return err
@@ -133,8 +144,15 @@ func wildflyClusterViewTest(t *testing.T, f *framework.Framework, ctx *framework
 	return wildflyframework.WaitUntilClusterIsFormed(f, t, wildflyServer, "clusterbench-0", "clusterbench-1")
 }
 
-func WildFlyBasicTest(t *testing.T) {
-	t.Parallel()
+func WildFly16BasicTest(t *testing.T) {
+	WildFlyBasicTest(t, "16.0")
+}
+
+func WildFly17BasicTest(t *testing.T) {
+	WildFlyBasicTest(t, "17.0")
+}
+
+func WildFlyBasicTest(t *testing.T, applicationTag string) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
 	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
@@ -143,6 +161,7 @@ func WildFlyBasicTest(t *testing.T) {
 	}
 	t.Log("Initialized cluster resources")
 	namespace, err := ctx.GetNamespace()
+	fmt.Printf("Initialized cluster resources\n")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,14 +172,14 @@ func WildFlyBasicTest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	fmt.Printf("Operator is deployed\n")
 
-	if err = wildflyBasicServerScaleTest(t, f, ctx); err != nil {
+	if err = wildflyBasicServerScaleTest(t, f, ctx, applicationTag); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func WildFlyClusterTest(t *testing.T) {
-	t.Parallel()
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
 	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})

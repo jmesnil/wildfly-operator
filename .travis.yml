@@ -11,6 +11,9 @@ cache:
   - $GOPATH/pkg/dep
 
 before_script:
+  - docker pull quay.io/jmesnil/wildfly-operator-quickstart:16.0
+  - docker pull quay.io/jmesnil/wildfly-operator-quickstart:17.0
+  - docker pull quay.io/jmesnil/clusterbench-ee7:16.0
   - go get -u github.com/golang/dep/cmd/dep
   - ci/start-okd-4.0.0.sh
 
@@ -19,4 +22,5 @@ after_failure:
   - for log in $(docker ps -qa | xargs); do docker logs --tail 500 $log; done
 
 script:
-  - make unit-test test-e2e KUBECONFIG=/tmp/openshift-dind-cluster/openshift/openshift.local.config/master/admin.kubeconfig
+  - make build
+  - make test-e2e KUBECONFIG=/tmp/openshift-dind-cluster/openshift/openshift.local.config/master/admin.kubeconfig

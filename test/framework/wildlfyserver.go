@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -21,7 +22,7 @@ import (
 
 var (
 	retryInterval        = time.Second * 5
-	timeout              = time.Minute * 3
+	timeout              = time.Minute * 5
 	cleanupRetryInterval = time.Second * 1
 	cleanupTimeout       = time.Second * 5
 )
@@ -86,8 +87,13 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 		statefulSet, err := f.KubeClient.AppsV1().StatefulSets(ns).Get(name, metav1.GetOptions{IncludeUninitialized: true})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
+				t.Logf("Statefulset %s not found", name)
+				fmt.Printf("Statefulset %s not found\n", name)
+
 				return false, nil
 			}
+			t.Logf("Got error when getting statefulset %s: %s", name, err)
+			fmt.Printf("Got error when getting statefulset %s: %s\n", name, err)
 			return false, err
 		}
 
@@ -96,11 +102,30 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 		}
 
 		t.Logf("Waiting for full availability of %s statefulset (%d/%d)\n", name, statefulSet.Status.Replicas, size)
+		fmt.Printf("Waiting for full availability of %s statefulset (%d/%d)\n", name, statefulSet.Status.Replicas, size)
+		for i := 0; i < int(size); i++ {
+			podName := server.ObjectMeta.Name + "-" + strconv.Itoa(i)
+			logs, err := GetLogs(f, server, podName)
+			if err != nil {
+				if apierrors.IsNotFound(err) {
+					t.Logf("Pod %s not found", podName)
+					fmt.Printf("Pod %s not found\n", podName)
+
+					return false, nil
+				}
+				t.Logf("Did not get any logs for %s: %s", podName, err)
+				fmt.Printf("Did not get any logs for %s: %s\n", podName, err)
+				return false, nil
+			}
+			t.Logf(logs)
+			fmt.Printf(logs)
+		}
 		return false, nil
 	})
 	if err != nil {
 		return err
 	}
+	t.Logf("statefulset available (%d/%d)\n", size, size)
 	t.Logf("statefulset available (%d/%d)\n", size, size)
 	return nil
 }
@@ -119,7 +144,9 @@ func WaitUntilWildFlyServerIstarted(f *framework.Framework, t *testing.T, server
 			return true, nil
 		}
 		t.Logf("Waiting for WildFly in %s to be be started", podName)
+		fmt.Printf("Waiting for WildFly in %s to be be started\n", podName)
 		t.Logf(logs)
+		fmt.Printf(logs)
 		return false, nil
 	})
 	if err != nil {
