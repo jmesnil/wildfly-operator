@@ -68,12 +68,7 @@ func CreateAndWaitUntilReady(f *framework.Framework, ctx *framework.TestCtx, t *
 		return err
 	}
 
-	err = WaitUntilReady(f, t, server)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return WaitUntilReady(f, t, server)
 }
 
 // WaitUntilReady waits until the stateful set replicas matches the server spec size.
@@ -81,6 +76,9 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 	name := server.ObjectMeta.Name
 	ns := server.ObjectMeta.Namespace
 	size := server.Spec.Size
+
+	t.Logf("Waiting until statefulset %s is ready", name)
+	fmt.Printf("Waiting until statefulset %s is ready\n", name)
 
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 
@@ -110,7 +108,6 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 				if apierrors.IsNotFound(err) {
 					t.Logf("Pod %s not found", podName)
 					fmt.Printf("Pod %s not found\n", podName)
-
 					return false, nil
 				}
 				t.Logf("Did not get any logs for %s: %s", podName, err)
@@ -126,7 +123,22 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 		return err
 	}
 	t.Logf("statefulset available (%d/%d)\n", size, size)
-	t.Logf("statefulset available (%d/%d)\n", size, size)
+	fmt.Printf("statefulset available (%d/%d)\n", size, size)
+	if size == 1 {
+		podName := server.ObjectMeta.Name + "-0"
+		logs, err := GetLogs(f, server, podName)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				t.Logf("Pod %s not found", podName)
+				fmt.Printf("Pod %s not found\n", podName)
+			} else {
+				t.Logf("Did not get any logs for %s: %s", podName, err)
+				fmt.Printf("Did not get any logs for %s: %s\n", podName, err)
+			}
+		}
+		t.Logf(logs)
+		fmt.Printf(logs)
+	}
 	return nil
 }
 
