@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -78,7 +77,6 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 	size := server.Spec.Size
 
 	t.Logf("Waiting until statefulset %s is ready", name)
-	fmt.Printf("Waiting until statefulset %s is ready\n", name)
 
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 
@@ -86,12 +84,10 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				t.Logf("Statefulset %s not found", name)
-				fmt.Printf("Statefulset %s not found\n", name)
 
 				return false, nil
 			}
 			t.Logf("Got error when getting statefulset %s: %s", name, err)
-			fmt.Printf("Got error when getting statefulset %s: %s\n", name, err)
 			return false, err
 		}
 
@@ -100,54 +96,12 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 		}
 
 		t.Logf("Waiting for full availability of %s statefulset (%d/%d)\n", name, statefulSet.Status.Replicas, size)
-		fmt.Printf("Waiting for full availability of %s statefulset (%d/%d)\n", name, statefulSet.Status.Replicas, size)
-		for i := 0; i < int(size); i++ {
-			podName := server.ObjectMeta.Name + "-" + strconv.Itoa(i)
-			logs, err := GetLogs(f, server, podName)
-			if err != nil {
-				if apierrors.IsNotFound(err) {
-					t.Logf("Pod %s not found", podName)
-					fmt.Printf("Pod %s not found\n", podName)
-					return false, nil
-				}
-				t.Logf("Did not get any logs for %s: %s", podName, err)
-				fmt.Printf("Did not get any logs for %s: %s\n", podName, err)
-
-				podStatus, err := getPodStatus(f, server, podName)
-				if err != nil {
-					t.Logf("Error when getting status of %s: %s", podName, err)
-					fmt.Printf("Error when getting status of %s: %s\n", podName, err)
-				} else {
-					t.Logf("Status of %s: %+v", podName, podStatus)
-					fmt.Printf("Status of %s: %+v\n", podName, podStatus)
-				}
-				return false, nil
-			}
-			t.Logf(logs)
-			fmt.Printf(logs)
-		}
 		return false, nil
 	})
 	if err != nil {
 		return err
 	}
 	t.Logf("statefulset available (%d/%d)\n", size, size)
-	fmt.Printf("statefulset available (%d/%d)\n", size, size)
-	if size == 1 {
-		podName := server.ObjectMeta.Name + "-0"
-		logs, err := GetLogs(f, server, podName)
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				t.Logf("Pod %s not found", podName)
-				fmt.Printf("Pod %s not found\n", podName)
-			} else {
-				t.Logf("Did not get any logs for %s: %s", podName, err)
-				fmt.Printf("Did not get any logs for %s: %s\n", podName, err)
-			}
-		}
-		t.Logf(logs)
-		fmt.Printf(logs)
-	}
 	return nil
 }
 
@@ -165,9 +119,7 @@ func WaitUntilWildFlyServerIstarted(f *framework.Framework, t *testing.T, server
 			return true, nil
 		}
 		t.Logf("Waiting for WildFly in %s to be be started", podName)
-		fmt.Printf("Waiting for WildFly in %s to be be started\n", podName)
 		t.Logf(logs)
-		fmt.Printf(logs)
 		return false, nil
 	})
 	if err != nil {
@@ -227,12 +179,4 @@ func GetLogs(f *framework.Framework, server *wildflyv1alpha1.WildFlyServer, podN
 	}
 	logs := buf.String()
 	return logs, nil
-}
-
-func getPodStatus(f *framework.Framework, server *wildflyv1alpha1.WildFlyServer, podName string) (corev1.PodStatus, error) {
-	pod, err := f.KubeClient.CoreV1().Pods(server.ObjectMeta.Namespace).Get(podName, metav1.GetOptions{})
-	if err != nil {
-		return corev1.PodStatus{}, err
-	}
-	return pod.Status, nil
 }

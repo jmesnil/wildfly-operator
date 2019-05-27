@@ -20,7 +20,7 @@ var (
 	cleanupTimeout       = time.Second * 5
 )
 
-func TestWildFlyServer(t *testing.T) {
+func TestWildFly17Server(t *testing.T) {
 	wildflyServerList := &wildflyv1alpha1.WildFlyServerList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "WildFlyServer",
@@ -32,9 +32,7 @@ func TestWildFlyServer(t *testing.T) {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}
 	// run subtests
-	t.Run("WildFly17Server", func(t *testing.T) {
-		t.Run("BasicTest", WildFly17BasicTest)
-	})
+	t.Run("BasicTest", WildFly17BasicTest)
 }
 
 func WildFly17BasicTest(t *testing.T) {

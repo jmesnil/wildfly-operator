@@ -26,7 +26,7 @@ var (
 	cleanupTimeout       = time.Second * 5
 )
 
-func TestWildFlyServer(t *testing.T) {
+func TestWildFly16Server(t *testing.T) {
 	wildflyServerList := &wildflyv1alpha1.WildFlyServerList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "WildFlyServer",
@@ -38,10 +38,8 @@ func TestWildFlyServer(t *testing.T) {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}
 	// run subtests
-	t.Run("WildFly16Server", func(t *testing.T) {
-		t.Run("BasicTest", WildFly16BasicTest)
-		t.Run("ClusterTest", WildFlyClusterTest)
-	})
+	t.Run("BasicTest", wildFlyBasicTest)
+	t.Run("ClusterTest", wildFlyClusterTest)
 }
 
 func wildflyClusterViewTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
@@ -104,11 +102,11 @@ func wildflyClusterViewTest(t *testing.T, f *framework.Framework, ctx *framework
 	return wildflyframework.WaitUntilClusterIsFormed(f, t, wildflyServer, "clusterbench-0", "clusterbench-1")
 }
 
-func WildFly16BasicTest(t *testing.T) {
+func wildFlyBasicTest(t *testing.T) {
 	wildflyframework.WildFlyBasicTest(t, "16.0")
 }
 
-func WildFlyClusterTest(t *testing.T) {
+func wildFlyClusterTest(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
 	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})

@@ -20,7 +20,7 @@ func WildFlyBasicTest(t *testing.T, applicationTag string) {
 	}
 	t.Log("Initialized cluster resources")
 	namespace, err := ctx.GetNamespace()
-	fmt.Printf("Initialized cluster resources\n")
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func WildFlyBasicTest(t *testing.T, applicationTag string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("Operator is deployed\n")
+	t.Log("Operator is deployed")
 
 	if err = wildflyBasicServerScaleTest(t, f, ctx, applicationTag); err != nil {
 		t.Fatal(err)
@@ -52,7 +52,7 @@ func wildflyBasicServerScaleTest(t *testing.T, f *framework.Framework, ctx *fram
 		return err
 	}
 
-	fmt.Printf("Application %s is deployed with %d instance\n", name, 1)
+	t.Logf("Application %s is deployed with %d instance\n", name, 1)
 
 	context := goctx.TODO()
 
@@ -66,7 +66,7 @@ func wildflyBasicServerScaleTest(t *testing.T, f *framework.Framework, ctx *fram
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Updated aplication %s size to %d\n", name, wildflyServer.Spec.Size)
+	t.Logf("Updated aplication %s size to %d\n", name, wildflyServer.Spec.Size)
 
 	// check that the resource have been updated
 	return WaitUntilReady(f, t, wildflyServer)
