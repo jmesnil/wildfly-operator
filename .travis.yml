@@ -9,6 +9,12 @@ services:
 cache:
   directories:
   - $GOPATH/pkg/dep
+  - $HOME/docker
+
+before_cache:
+  # Save tagged docker images
+  - >
+    mkdir -p $HOME/docker && docker images -a --filter='dangling=false' --format '{{.Repository}}:{{.Tag}} {{.ID}}' | xargs -n 2 -t sh -c 'test -e $HOME/docker/$1.tar.gz || docker save $0 | gzip -2 > $HOME/docker/$1.tar.gz'
 
 before_script:
   - docker pull quay.io/jmesnil/wildfly-operator-quickstart:16.0
@@ -16,6 +22,10 @@ before_script:
   - docker pull quay.io/jmesnil/clusterbench-ee7:16.0
   - go get -u github.com/golang/dep/cmd/dep
   - ci/start-okd-4.0.0.sh
+
+before_install:
+  # Load cached docker images
+  - if [[ -d $HOME/docker ]]; then ls $HOME/docker/*.tar.gz | xargs -I {file} sh -c "zcat {file} | docker load"; fi
 
 after_failure:
   - docker ps -a
