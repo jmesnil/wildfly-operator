@@ -112,6 +112,15 @@ func WaitUntilReady(f *framework.Framework, t *testing.T, server *wildflyv1alpha
 				}
 				t.Logf("Did not get any logs for %s: %s", podName, err)
 				fmt.Printf("Did not get any logs for %s: %s\n", podName, err)
+
+				podStatus, err := getPodStatus(f, server, podName)
+				if err != nil {
+					t.Logf("Error when getting status of %s: %s", podName, err)
+					fmt.Printf("Error when getting status of %s: %s\n", podName, err)
+				} else {
+					t.Logf("Status of %s: %+v", podName, podStatus)
+					fmt.Printf("Status of %s: %+v\n", podName, podStatus)
+				}
 				return false, nil
 			}
 			t.Logf(logs)
@@ -218,4 +227,12 @@ func GetLogs(f *framework.Framework, server *wildflyv1alpha1.WildFlyServer, podN
 	}
 	logs := buf.String()
 	return logs, nil
+}
+
+func getPodStatus(f *framework.Framework, server *wildflyv1alpha1.WildFlyServer, podName string) (corev1.PodStatus, error) {
+	pod, err := f.KubeClient.CoreV1().Pods(server.ObjectMeta.Namespace).Get(podName, metav1.GetOptions{})
+	if err != nil {
+		return corev1.PodStatus{}, err
+	}
+	return pod.Status, nil
 }
