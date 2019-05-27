@@ -44,7 +44,7 @@ func TestWildFlyServer(t *testing.T) {
 			t.Run("BasicTest", WildFly17BasicTest)
 		})
 		t.Run("WildFly16", func(t *testing.T) {
-			//t.Run("BasicTest", WildFly16BasicTest)
+			t.Run("BasicTest", WildFly16BasicTest)
 			//t.Run("ClusterTest", WildFlyClusterTest)
 		})
 	})
