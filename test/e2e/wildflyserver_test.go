@@ -41,11 +41,11 @@ func TestWildFlyServer(t *testing.T) {
 	// run subtests
 	t.Run("WildFlyServer", func(t *testing.T) {
 		t.Run("WildFly17", func(t *testing.T) {
-			t.Run("BasicTest", WildFly17BasicTest)
+			//t.Run("BasicTest", WildFly17BasicTest)
 		})
 		t.Run("WildFly16", func(t *testing.T) {
 			t.Run("BasicTest", WildFly16BasicTest)
-			t.Run("ClusterTest", WildFlyClusterTest)
+			//t.Run("ClusterTest", WildFlyClusterTest)
 		})
 	})
 }
