@@ -275,7 +275,7 @@ func checkUpdate(w *wildflyv1alpha1.WildFlyServer, statefuleSet *appsv1.Stateful
 	// add the clustering envs that are added by the operator
 	env = append(env, envForClustering(labels.SelectorFromSet(labelsForWildFly(w)).String())...)
 	if !reflect.DeepEqual(statefuleSet.Spec.Template.Spec.Containers[0].Env, env) {
-		log.Info("Updating statefulset env", "StatefulSet.Namespace", statefuleSet.Namespace, "StatefulSet.Name", statefuleSet.Name, "Env", env)
+		log.Info("Updating statefulset env", "StatefulSet.Namespace", statefuleSet.Namespace, "StatefulSet.Name", statefuleSet.Name, "Updated Env", env, "Previous Env", statefuleSet.Spec.Template.Spec.Containers[0].Env)
 		statefuleSet.Spec.Template.Spec.Containers[0].Env = env
 		update = true
 	}
