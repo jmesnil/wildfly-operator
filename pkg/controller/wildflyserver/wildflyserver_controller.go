@@ -151,7 +151,7 @@ func (r *ReconcileWildFlyServer) Reconcile(request reconcile.Request) (reconcile
 	if generationStr, found := foundStatefulSet.Labels["wildfly.org/wildfly-server-generation"]; found {
 		if generation, err := strconv.ParseInt(generationStr, 10, 64); err == nil {
 			// WildFlyServer spec has possibly change, recreate the statefulset by deleting the existing one
-			// delete the statefulset and requeue
+			// and requeue
 			if generation < wildflyServer.Generation {
 				statefulSet := r.statefulSetForWildFly(wildflyServer)
 				if err = r.client.Delete(context.TODO(), statefulSet); err != nil {
