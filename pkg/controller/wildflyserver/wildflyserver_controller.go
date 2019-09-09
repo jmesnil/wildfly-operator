@@ -148,16 +148,20 @@ func (r *ReconcileWildFlyServer) Reconcile(request reconcile.Request) (reconcile
 		return reconcile.Result{}, err
 	}
 
-	// check if the stateful set is up to date with the WildFlyServerSpec
-	if checkUpdate(wildflyServer, foundStatefulSet) {
-		err = r.client.Update(context.TODO(), foundStatefulSet)
-		if err != nil {
-			reqLogger.Error(err, "Failed to update StatefulSet.", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
-			return reconcile.Result{}, err
+	if generationStr, found := foundStatefulSet.Labels["wildfly.org/wildfly-server-generation"]; found {
+		if generation, err := strconv.ParseInt(generationStr, 10, 64); err == nil {
+			// WildFlyServer spec has possibly change, recreate the statefulset by deleting the existing one
+			// delete the statefulset and requeue
+			if generation < wildflyServer.Generation {
+				statefulSet := r.statefulSetForWildFly(wildflyServer)
+				if err = r.client.Delete(context.TODO(), statefulSet); err != nil {
+					reqLogger.Error(err, "Failed to delete StatefulSet.", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
+					return reconcile.Result{}, err
+				}
+				reqLogger.Info("Deleting StatefulSet that is no longer up to date with the WildFlyServer spec", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
+				return reconcile.Result{Requeue: true}, nil
+			}
 		}
-
-		// Spec updated - return and requeue
-		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// Check if the loadbalancer already exists, if not create a new one
@@ -253,43 +257,6 @@ func (r *ReconcileWildFlyServer) Reconcile(request reconcile.Request) (reconcile
 	return reconcile.Result{}, nil
 }
 
-// check if the statefulset resource is up to date with the WildFlyServerSpec
-func checkUpdate(w *wildflyv1alpha1.WildFlyServer, statefuleSet *appsv1.StatefulSet) bool {
-	var update bool
-	// Ensure the application image is up to date
-	applicationImage := w.Spec.ApplicationImage
-	if statefuleSet.Spec.Template.Spec.Containers[0].Image != applicationImage {
-		log.Info("Updating application image to "+applicationImage, "StatefulSet.Namespace", statefuleSet.Namespace, "StatefulSet.Name", statefuleSet.Name)
-		statefuleSet.Spec.Template.Spec.Containers[0].Image = applicationImage
-		update = true
-	}
-	// Ensure the statefulset replicas is up to date
-	size := w.Spec.Size
-	if *statefuleSet.Spec.Replicas != size {
-		log.Info("Updating replica size to "+strconv.Itoa(int(size)), "StatefulSet.Namespace", statefuleSet.Namespace, "StatefulSet.Name", statefuleSet.Name)
-		statefuleSet.Spec.Replicas = &size
-		update = true
-	}
-	// Ensure the env variables are up to date
-	env := w.Spec.Env
-	// add the clustering envs that are added by the operator
-	env = append(env, envForClustering(labels.SelectorFromSet(labelsForWildFly(w)).String())...)
-	if !reflect.DeepEqual(statefuleSet.Spec.Template.Spec.Containers[0].Env, env) {
-		log.Info("Updating statefulset env", "StatefulSet.Namespace", statefuleSet.Namespace, "StatefulSet.Name", statefuleSet.Name, "Updated Env", env, "Previous Env", statefuleSet.Spec.Template.Spec.Containers[0].Env)
-		statefuleSet.Spec.Template.Spec.Containers[0].Env = env
-		update = true
-	}
-	// Ensure the envFrom variables are up to date
-	envFrom := w.Spec.EnvFrom
-	if !reflect.DeepEqual(statefuleSet.Spec.Template.Spec.Containers[0].EnvFrom, envFrom) {
-		log.Info("Updating envFrom", "StatefulSet.Namespace", statefuleSet.Namespace, "StatefulSet.Name", statefuleSet.Name)
-		statefuleSet.Spec.Template.Spec.Containers[0].EnvFrom = envFrom
-		update = true
-	}
-
-	return update
-}
-
 // matches checks if the envVar from the WildFlyServerSpec matches the same env var from the container.
 // If it does not match, it updates the container EnvVar with the fields from the WildFlyServerSpec and return false.
 func matches(container *v1.Container, envVar corev1.EnvVar) bool {
@@ -310,6 +277,9 @@ func matches(container *v1.Container, envVar corev1.EnvVar) bool {
 // statefulSetForWildFly returns a wildfly StatefulSet object
 func (r *ReconcileWildFlyServer) statefulSetForWildFly(w *wildflyv1alpha1.WildFlyServer) *appsv1.StatefulSet {
 	ls := labelsForWildFly(w)
+	// track the generation number of the WildFlyServer that created the statefulset to ensure that the
+	// statefulset is always up to date with the WildFlyServerSpec
+	ls["wildfly.org/wildfly-server-generation"] = strconv.FormatInt(w.Generation, 10)
 	replicas := w.Spec.Size
 	applicationImage := w.Spec.ApplicationImage
 	volumeName := w.Name + "-volume"

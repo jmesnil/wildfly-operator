@@ -149,9 +149,16 @@ func TestEnvUpdate(t *testing.T) {
 
 	// update the env in the WildFlyServerSpec
 	wildflyServer.Spec.Env[0].Value = "UPDATE"
-	cl.Update(context.TODO(), wildflyServer)
+	wildflyServer.SetGeneration(wildflyServer.GetGeneration() + 1)
+	err = cl.Update(context.TODO(), wildflyServer)
+	t.Logf("WildFlyServerSpec generation %d", wildflyServer.GetGeneration())
 	require.NoError(t, err)
 
+	res, err = r.Reconcile(req)
+	require.NoError(t, err)
+	if !res.Requeue {
+		t.Error("reconcile did not requeue request as expected")
+	}
 	res, err = r.Reconcile(req)
 	require.NoError(t, err)
 	if !res.Requeue {
@@ -167,11 +174,18 @@ func TestEnvUpdate(t *testing.T) {
 		}
 	}
 
-	// remote the env from the WildFlyServerSpec
+	// remove the env from the WildFlyServerSpec
 	wildflyServer.Spec.Env = []corev1.EnvVar{}
-	cl.Update(context.TODO(), wildflyServer)
+	wildflyServer.SetGeneration(wildflyServer.GetGeneration() + 1)
+	err = cl.Update(context.TODO(), wildflyServer)
+	t.Logf("WildFlyServerSpec generation %d", wildflyServer.GetGeneration())
 	require.NoError(t, err)
 
+	res, err = r.Reconcile(req)
+	require.NoError(t, err)
+	if !res.Requeue {
+		t.Error("reconcile did not requeue request as expected")
+	}
 	res, err = r.Reconcile(req)
 	require.NoError(t, err)
 	if !res.Requeue {
@@ -195,10 +209,16 @@ func TestEnvUpdate(t *testing.T) {
 	wildflyServer.Spec.Env = []corev1.EnvVar{
 		*addedEnv,
 	}
-
-	cl.Update(context.TODO(), wildflyServer)
+	wildflyServer.SetGeneration(wildflyServer.GetGeneration() + 1)
+	err = cl.Update(context.TODO(), wildflyServer)
+	t.Logf("WildFlyServerSpec generation %d", wildflyServer.GetGeneration())
 	require.NoError(t, err)
 
+	res, err = r.Reconcile(req)
+	require.NoError(t, err)
+	if !res.Requeue {
+		t.Error("reconcile did not requeue request as expected")
+	}
 	res, err = r.Reconcile(req)
 	require.NoError(t, err)
 	if !res.Requeue {
