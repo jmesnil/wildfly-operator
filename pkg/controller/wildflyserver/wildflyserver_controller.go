@@ -150,15 +150,17 @@ func (r *ReconcileWildFlyServer) Reconcile(request reconcile.Request) (reconcile
 
 	if generationStr, found := foundStatefulSet.Labels["wildfly.org/wildfly-server-generation"]; found {
 		if generation, err := strconv.ParseInt(generationStr, 10, 64); err == nil {
-			// WildFlyServer spec has possibly change, recreate the statefulset by deleting the existing one
-			// and requeue
+			// WildFlyServer spec has possibly change, update the statefulset spec
+			// as well as the WildFlyServer generation in its labels
 			if generation < wildflyServer.Generation {
 				statefulSet := r.statefulSetForWildFly(wildflyServer)
-				if err = r.client.Delete(context.TODO(), statefulSet); err != nil {
-					reqLogger.Error(err, "Failed to delete StatefulSet.", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
+				foundStatefulSet.Spec = statefulSet.Spec
+				foundStatefulSet.Labels["wildfly.org/wildfly-server-generation"] = strconv.FormatInt(wildflyServer.Generation, 10)
+				if err = r.client.Update(context.TODO(), statefulSet); err != nil {
+					reqLogger.Error(err, "Failed to Update StatefulSet.", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
 					return reconcile.Result{}, err
 				}
-				reqLogger.Info("Deleting StatefulSet that is no longer up to date with the WildFlyServer spec", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
+				reqLogger.Info("Updating StatefulSet to be up to date with the WildFlyServer spec", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
 				return reconcile.Result{Requeue: true}, nil
 			}
 		}
