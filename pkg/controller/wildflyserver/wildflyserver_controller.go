@@ -148,7 +148,7 @@ func (r *ReconcileWildFlyServer) Reconcile(request reconcile.Request) (reconcile
 		return reconcile.Result{}, err
 	}
 
-	if generationStr, found := foundStatefulSet.Labels["wildfly.org/wildfly-server-generation"]; found {
+	if generationStr, found := foundStatefulSet.Annotations["wildfly.org/wildfly-server-generation"]; found {
 		if generation, err := strconv.ParseInt(generationStr, 10, 64); err == nil {
 			// WildFlyServer spec has possibly change, update the statefulset spec
 			// template and replicas
@@ -157,7 +157,7 @@ func (r *ReconcileWildFlyServer) Reconcile(request reconcile.Request) (reconcile
 				statefulSet := r.statefulSetForWildFly(wildflyServer)
 				foundStatefulSet.Spec.Template = statefulSet.Spec.Template
 				foundStatefulSet.Spec.Replicas = statefulSet.Spec.Replicas
-				foundStatefulSet.Labels["wildfly.org/wildfly-server-generation"] = strconv.FormatInt(wildflyServer.Generation, 10)
+				foundStatefulSet.Annotations["wildfly.org/wildfly-server-generation"] = strconv.FormatInt(wildflyServer.Generation, 10)
 				if err = r.client.Update(context.TODO(), statefulSet); err != nil {
 					reqLogger.Error(err, "Failed to Update StatefulSet.", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
 					return reconcile.Result{}, err
@@ -283,7 +283,9 @@ func (r *ReconcileWildFlyServer) statefulSetForWildFly(w *wildflyv1alpha1.WildFl
 	ls := labelsForWildFly(w)
 	// track the generation number of the WildFlyServer that created the statefulset to ensure that the
 	// statefulset is always up to date with the WildFlyServerSpec
-	ls["wildfly.org/wildfly-server-generation"] = strconv.FormatInt(w.Generation, 10)
+	annotations := make(map[string]string)
+	annotations["wildfly.org/wildfly-server-generation"] = strconv.FormatInt(w.Generation, 10)
+
 	replicas := w.Spec.Size
 	applicationImage := w.Spec.ApplicationImage
 	volumeName := w.Name + "-volume"
@@ -294,9 +296,10 @@ func (r *ReconcileWildFlyServer) statefulSetForWildFly(w *wildflyv1alpha1.WildFl
 			Kind:       "StatefulSet",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      w.Name,
-			Namespace: w.Namespace,
-			Labels:    ls,
+			Name:        w.Name,
+			Namespace:   w.Namespace,
+			Labels:      ls,
+			Annotations: annotations,
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &replicas,
