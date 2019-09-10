@@ -151,10 +151,31 @@ func (r *ReconcileWildFlyServer) Reconcile(request reconcile.Request) (reconcile
 	if generationStr, found := foundStatefulSet.Annotations["wildfly.org/wildfly-server-generation"]; found {
 		if generation, err := strconv.ParseInt(generationStr, 10, 64); err == nil {
 			// WildFlyServer spec has possibly change, delete the statefulset
-			// so that a new one is created with from the updated spec
+			// so that a new one is created from the updated spec
 			if generation < wildflyServer.Generation {
 				statefulSet := r.statefulSetForWildFly(wildflyServer)
-				if !reflect.DeepEqual(statefulSet.Spec.VolumeClaimTemplates, foundStatefulSet.Spec.VolumeClaimTemplates) {
+				delete := false
+				// changes to VolumeClaimTemplates can not be updated and requires a delete/create of the statefulset
+				if len(statefulSet.Spec.VolumeClaimTemplates) > 0 {
+					if len(foundStatefulSet.Spec.VolumeClaimTemplates) == 0 {
+						// existing stateful set does not have a VCT
+						delete = true
+					} else {
+						foundVCT := foundStatefulSet.Spec.VolumeClaimTemplates[0]
+						vct := statefulSet.Spec.VolumeClaimTemplates[0]
+
+						if foundVCT.Name != vct.Name ||
+							!reflect.DeepEqual(foundVCT.Spec.AccessModes, vct.Spec.AccessModes) ||
+							!reflect.DeepEqual(foundVCT.Spec.Resources, vct.Spec.Resources) {
+							delete = true
+						}
+					}
+				} else {
+					if len(foundStatefulSet.Spec.VolumeClaimTemplates) != 0 {
+						// existing stateful set has a VCT while updated statefulset does not
+						delete = true
+				}
+				if delete {
 					// VolumeClaimTemplates has changed, the statefulset can not be updated and must be deleted
 					if err = r.client.Delete(context.TODO(), foundStatefulSet); err != nil {
 						reqLogger.Error(err, "Failed to Delete StatefulSet.", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
