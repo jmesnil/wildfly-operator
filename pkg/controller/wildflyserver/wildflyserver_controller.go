@@ -151,10 +151,12 @@ func (r *ReconcileWildFlyServer) Reconcile(request reconcile.Request) (reconcile
 	if generationStr, found := foundStatefulSet.Labels["wildfly.org/wildfly-server-generation"]; found {
 		if generation, err := strconv.ParseInt(generationStr, 10, 64); err == nil {
 			// WildFlyServer spec has possibly change, update the statefulset spec
+			// template and replicas
 			// as well as the WildFlyServer generation in its labels
 			if generation < wildflyServer.Generation {
 				statefulSet := r.statefulSetForWildFly(wildflyServer)
-				foundStatefulSet.Spec = statefulSet.Spec
+				foundStatefulSet.Spec.Template = statefulSet.Spec.Template
+				foundStatefulSet.Spec.Replicas = statefulSet.Spec.Replicas
 				foundStatefulSet.Labels["wildfly.org/wildfly-server-generation"] = strconv.FormatInt(wildflyServer.Generation, 10)
 				if err = r.client.Update(context.TODO(), statefulSet); err != nil {
 					reqLogger.Error(err, "Failed to Update StatefulSet.", "StatefulSet.Namespace", foundStatefulSet.Namespace, "StatefulSet.Name", foundStatefulSet.Name)
