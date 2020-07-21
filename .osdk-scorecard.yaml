@@ -1,3 +1,0 @@
-cr-manifest: "deploy/crds/quickstart-cr.yaml"
-init-timeout: 30
-olm-tests: false
