@@ -53,6 +53,7 @@ rules:
   verbs:
   - get
   - create
+  - list
 - apiGroups:
   - wildfly.org
   resources:
