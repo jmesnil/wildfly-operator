@@ -85,9 +85,9 @@ func NewStatefulSet(w *wildflyv1alpha1.WildFlyServer, labels map[string]string, 
 								Name:          "admin",
 							},
 						},
-						LivenessProbe: createLivenessProbe(),
-						// Readiness Probe is options
-						ReadinessProbe: createReadinessProbe(),
+						LivenessProbe: createLivenessProbe(w),
+						// Readiness Probe is optional
+						ReadinessProbe: createReadinessProbe(w),
 					}},
 					ServiceAccountName: w.Spec.ServiceAccountName,
 				},
@@ -232,14 +232,15 @@ func NewStatefulSet(w *wildflyv1alpha1.WildFlyServer, labels map[string]string, 
 	return statefulSet
 }
 
-// createLivenessProbe create a Exec probe if the SERVER_LIVENESS_SCRIPT env var is present.
+// createLivenessProbe create a Exec probe if the SERVER_LIVENESS_SCRIPT env var is present
+// *and* the application is not using Bootable Jar.
 // Otherwise, it creates a HTTPGet probe that checks the /health endpoint on the admin port.
 //
 // If defined, the SERVER_LIVENESS_SCRIPT env var must be the path of a shell script that
 // complies to the Kuberenetes probes requirements.
-func createLivenessProbe() *corev1.Probe {
+func createLivenessProbe(w *wildflyv1alpha1.WildFlyServer) *corev1.Probe {
 	livenessProbeScript, defined := os.LookupEnv("SERVER_LIVENESS_SCRIPT")
-	if defined {
+	if defined && !w.Spec.BootableJar {
 		return &corev1.Probe{
 			Handler: corev1.Handler{
 				Exec: &corev1.ExecAction{
@@ -252,7 +253,7 @@ func createLivenessProbe() *corev1.Probe {
 	return &corev1.Probe{
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
-				Path: "/health",
+				Path: "/health/",
 				Port: intstr.FromString("admin"),
 			},
 		},
@@ -260,20 +261,33 @@ func createLivenessProbe() *corev1.Probe {
 	}
 }
 
-// createReadinessProbe create a Exec probe if the SERVER_READINESS_SCRIPT env var is present.
+// createReadinessProbe create a Exec probe if the SERVER_READINESS_SCRIPT env var is present
+// *and* the application is not using Bootable Jar.
+// If the application is using Bootable Jar, it creates a HGGET probe on /health/ready.
 // Otherwise, it returns nil (i.e. no readiness probe is configured).
 //
 // If defined, the SERVER_READINESS_SCRIPT env var must be the path of a shell script that
 // complies to the Kuberenetes probes requirements.
-func createReadinessProbe() *corev1.Probe {
+func createReadinessProbe(w *wildflyv1alpha1.WildFlyServer) *corev1.Probe {
 	readinessProbeScript, defined := os.LookupEnv("SERVER_READINESS_SCRIPT")
-	if defined {
+	if defined && !w.Spec.BootableJar {
 		return &corev1.Probe{
 			Handler: corev1.Handler{
 				Exec: &corev1.ExecAction{
 					Command: []string{"/bin/bash", "-c", readinessProbeScript},
 				},
 			},
+		}
+	}
+	if w.Spec.BootableJar {
+		return &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: "/health/ready",
+					Port: intstr.FromString("admin"),
+				},
+			},
+			InitialDelaySeconds: 60,
 		}
 	}
 	return nil

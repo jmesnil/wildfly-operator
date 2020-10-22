@@ -166,6 +166,13 @@ func schema_pkg_apis_wildfly_v1alpha1_WildFlyServerSpec(ref common.ReferenceCall
 							Format:      "",
 						},
 					},
+					"bootableJar": {
+						SchemaProps: spec.SchemaProps{
+							Description: "BootableJar specifies whether the application image is using WildFly S2I Builder/Runtime images or Bootable Jar. If unspecified, it defaults to false (application image is expected to use WildFly S2I Builder/Runtime images)",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Replicas is the desired number of replicas for the application",
