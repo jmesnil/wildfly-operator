@@ -45,16 +45,16 @@ wildfly-operator-648dff6c6f-s6bvp   0/1     Running             0          104s
 wildfly-operator-648dff6c6f-s6bvp   1/1     Running             0          113s
 
 $ kubectl --namespace wildfly-operator logs -f wildfly-operator-648dff6c6f-s6bvp
-
 __  ____  __  _____   ___  __ ____  ______
  --/ __ \/ / / / _ | / _ \/ //_/ / / / __/
  -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \
 --\___\_\____/_/ |_/_/|_/_/|_|\____/___/
-2021-01-22 13:44:25,565 INFO  [io.quarkus] (main) wildfly-operator 1.0.0-SNAPSHOT on JVM (powered by Quarkus 1.11.0.Final) started in 1.715s. Listening on: http://0.0.0.0:8080
-2021-01-22 13:44:25,569 INFO  [io.quarkus] (main) Profile prod activated.
-2021-01-22 13:44:25,570 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, kubernetes-client, operator-sdk, smallrye-health]
-2021-01-22 13:44:26,644 INFO  [io.jav.ope.Operator] (main) Registered Controller: 'WildFlyServerController_ClientProxy' for CRD: 'class org.wildfly.operator.WildFlyServer' for namespaces: [all/client namespace]
-...
+2021-01-22 16:21:53,692 INFO  [io.quarkus] (main) wildfly-operator 1.0.0-SNAPSHOT on JVM (powered by Quarkus 1.11.0.Final) started in 1.877s. Listening on: http://0.0.0.0:8080
+2021-01-22 16:21:53,696 INFO  [io.quarkus] (main) Profile prod activated.
+2021-01-22 16:21:53,696 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, kubernetes-client, operator-sdk, smallrye-health]
+2021-01-22 16:21:54,867 INFO  [io.jav.ope.Operator] (main) Registered Controller: 'WildFlyServerController_ClientProxy' for CRD: 'class org.wildfly.operator.WildFlyServer' for namespaces: [all/client namespace]
+Watching for CustomResourceDefinition:wildflyservers.wildfly.org
+Using Custom Resource Classclass org.wildfly.operator.WildFlyServer
 ```
 
 # Deploy the example
@@ -80,19 +80,20 @@ You can also see the deployed `WildFlyServer` resource:
 $ kubectl get --namespace wildfly-operator wfly wildfly-app
 NAME          REPLICAS   AGE
 wildfly-app   1          85s
-$ kubectl get --namespace wildfly-operator wfly wildfly-app
+
+$ kubectl describe --namespace wildfly-operator wfly wildfly-app
 Name:         wildfly-app
 Namespace:    wildfly-operator
 API Version:  wildfly.org/v1beta1
 Kind:         WildFlyServer
-Metadata:
-  ...
+...
 Spec:
-  Application Image:  myapp
+  Application Image:  quay.io/wildfly-quickstarts/wildfly-operator-quickstart:18.0
   Replicas:           1
 Status:
   Replicas:  1
 Events:      <none>
+
 ```
 
 To see the application being deployed, you can watch the pods:
@@ -105,24 +106,29 @@ wildfly-operator-648dff6c6f-wgwxw   1/1     Running             0          3m19s
 wildfly-app-0                       1/1     Running             0          3m30s
 ```
 
-and look at the logs of the WildFly application with `$kubectl --namespace wildfly-operator logs -f wildfly-app-0`
+and look at the logs of the WildFly application with `$ kubectl --namespace wildfly-operator logs -f wildfly-app-0`
 
 Finally, you can query the application:
 
 ```
-$ curl $(minikube service wildfly-app-loadbalancer --url)
+$ minikube service wildfly-app-loadbalancer -n wildfly-operator
 ```
 
-# Clean up the Cluster
+This will open a browser that displays the IP address returned by the Java application running
+ on WildFly ([from this source code](https://github.com/jmesnil/wildfly-operator-quickstart/blob/ba8b704905542fe1b0f5eacb2d9e480fa729762b/src/main/java/org/jboss/as/quickstarts/rshelloworld/HostService.java#L24)).
+
+# Undeploy the Example
 
 You can delete the application example with:
 
 ```
-kubectl delete -f examples/
+$ kubectl delete -f examples/
 ```
+
+# Undeploy the Operator
 
 Then the Operator can be deleted with:
 
 ```
-kubectl delete -f deploy/
+$ kubectl delete -f deploy/
 ```

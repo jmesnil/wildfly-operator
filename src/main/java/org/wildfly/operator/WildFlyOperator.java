@@ -50,11 +50,9 @@ public class WildFlyOperator implements QuarkusApplication {
     public int run(String... args) throws Exception {
         WildFlyServerController controller = new WildFlyServerController(client);
         final var config = configuration.getConfigurationFor(controller);
-        System.out.println("config = " + config);
 
-        System.out.println("CR class: " + config.getCustomResourceClass());
-        System.out.println("CRD Name = " + config.getCRDName());
-        System.out.println("Config Name = " + config.getName());
+        System.out.println("Watching for CustomResourceDefinition:" + config.getCRDName());
+        System.out.println("Using Custom Resource Class" + config.getCustomResourceClass());
 
         Quarkus.waitForExit();
         return 0;
