@@ -18,6 +18,8 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
 
     private static final Logger log = LoggerFactory.getLogger(WildFlyServerController.class);
 
+    public static final String KIND = "Wil";
+
     private final KubernetesClient kubernetesClient;
 
     public WildFlyServerController(KubernetesClient kubernetesClient) {

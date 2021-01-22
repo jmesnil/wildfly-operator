@@ -21,6 +21,8 @@
  */
 package org.wildfly.operator.resources;
 
+import static org.wildfly.operator.resources.Resources.ownedBy;
+
 import java.util.Collections;
 
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -30,7 +32,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wildfly.operator.WildFlyServer;
-import org.wildfly.operator.WildFlyServerController;
 
 public class Services {
 
@@ -44,15 +45,15 @@ public class Services {
         ServiceSpec serviceSpec = new ServiceSpec();
         serviceSpec.setPorts(Collections.singletonList(servicePort));
 
-        System.out.println(10);
         client
                 .services()
                 .inNamespace(wildflyServer.getMetadata().getNamespace())
                 .createOrReplace(
                         new ServiceBuilder()
                                 .withNewMetadata()
-                                .withName(wildflyServer.getSpec().getApplicationImage())
-                                .addToLabels("testLabel", "" + wildflyServer.getSpec().getReplicas())
+                                .withName(wildflyServer.getMetadata().getName())
+                                .addToLabels("testLabel", "" + wildflyServer.getSpec().getApplicationImage())
+                                .withOwnerReferences(ownedBy(wildflyServer))
                                 .endMetadata()
                                 .withSpec(serviceSpec)
                                 .build());

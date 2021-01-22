@@ -18,7 +18,7 @@ your `~.m2/settings.xml`:
 # Build the operator
 
 ```
-$ mvn clean build
+$ mvn clean install
 ```
 
 # Deploy the operator on Kubernetes
@@ -35,14 +35,16 @@ customresourcedefinition.apiextensions.k8s.io/wildflyservers.wildfly.org created
 ```
 All resources are created in the `wildfly-operator` namespace.
 
-* Check that the Operator is running:
+* Check that the Operator is created and wait until it is running and ready:
 
 ```
-$ kubectl --namespace wildfly-operator get pods
-NAME                                READY   STATUS    RESTARTS   AGE
-wildfly-operator-648dff6c6f-hf87k   1/1     Running   0          18s
+$ kubectl --namespace wildfly-operator get -w pods
+NAME                                READY   STATUS              RESTARTS   AGE
+wildfly-operator-648dff6c6f-s6bvp   0/1     ContainerCreating   0          19s
+wildfly-operator-648dff6c6f-s6bvp   0/1     Running             0          104s
+wildfly-operator-648dff6c6f-s6bvp   1/1     Running             0          113s
 
-$ kubectl --namespace wildfly-operator logs -f wildfly-operator-648dff6c6f-hf87k
+$ kubectl --namespace wildfly-operator logs -f wildfly-operator-648dff6c6f-s6bvp
 
 __  ____  __  _____   ___  __ ____  ______
  --/ __ \/ / / / _ | / _ \/ //_/ / / / __/
@@ -58,7 +60,7 @@ __  ____  __  _____   ___  __ ____  ______
 # Deploy the example
 
 ```
-$ kubectl apply -f examples/wildflyserver.cr.yaml
+$ kubectl apply -f examples/wildfly-app.yaml
 wildflyserver.wildfly.org/wildfly-app created
 ```
 
@@ -66,27 +68,43 @@ You can see in the logs of the WildFly Operator that the resource has been taken
 
 ```
 ...
-2021-01-22 13:45:49,190 INFO  [io.jav.ope.pro.EventDispatcher] (EventHandler-org.wildfly.operator.WildFlyServerController_ClientProxy) Adding finalizer to ObjectMeta(annotations={kubectl.kubernetes.
-io/last-applied-configuration={"apiVersion":"wildfly.org/v1beta1","kind":"WildFlyServer","metadata":{"annotations":{},"name":"wildfly-app","namespace":"wildfly-operator"},"spec":{"applicationImage":
-"myapp","replicas":1}}
-}, clusterName=null, creationTimestamp=2021-01-22T13:45:48Z, deletionGracePeriodSeconds=null, deletionTimestamp=null, finalizers=[], generateName=null, generation=1, labels=null, managedFields=[Mana
-gedFieldsEntry(apiVersion=wildfly.org/v1beta1, fieldsType=FieldsV1, fieldsV1=FieldsV1(additionalProperties={f:metadata={f:annotations={.={}, f:kubectl.kubernetes.io/last-applied-configuration={}}},
-f:spec={.={}, f:applicationImage={}, f:replicas={}}}), manager=kubectl-client-side-apply, operation=Update, time=2021-01-22T13:45:48Z, additionalProperties={})], name=wildfly-app, namespace=wildfly-
-operator, ownerReferences=[], resourceVersion=1113, selfLink=null, uid=305af3f1-2b55-4c8f-8b1d-21e68fd7284e, additionalProperties={})
+2021-01-22 15:10:19,169 INFO  [io.jav.ope.pro.EventDispatcher] (EventHandler-org.wildfly.operator.WildFlyServerController_ClientProxy) Adding finalizer to ObjectMeta(annotations={kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"wildfly.org/v1beta1","kind":"WildFlyServer","metadata":{"annotations":{},"name":"wildfly-app","namespace":"wildfly-operator"},"spec":{"applicationImage":"myapp","replicas":1}}
+}, clusterName=null, creationTimestamp=2021-01-22T15:10:18Z, deletionGracePeriodSeconds=null, deletionTimestamp=null, finalizers=[], generateName=null, generation=1, labels=null, managedFields=[ManagedFieldsEntry(apiVersion=wildfly.org/v1beta1, fieldsType=FieldsV1, fieldsV1=FieldsV1(additionalProperties={f:metadata={f:annotations={.={}, f:kubectl.kubernetes.io/last-applied-configuration={}}}, f:spec={.={}, f:applicationImage={}, f:replicas={}}}), manager=kubectl-client-side-apply, operation=Update, time=2021-01-22T15:10:18Z, additionalProperties={})], name=wildfly-app, namespace=wildfly-operator, ownerReferences=[], resourceVersion=659, selfLink=null, uid=e7f37ec8-b461-492a-98a7-c7632611bd9c, additionalProperties={})
+2021-01-22 15:10:19,217 WARN  [io.fab.kub.cli.int.VersionUsageUtils] (EventHandler-org.wildfly.operator.WildFlyServerController_ClientProxy) The client is using resource type 'wildflyservers' with unstable version 'v1beta1'
 ...
 ```
 
 You can also see the deployed `WildFlyServer` resource:
 
 ```
-$ kubectl describe wfly/wildfly-example
+$ kubectl get --namespace wildfly-operator wfly wildfly-app
+NAME          REPLICAS   AGE
+wildfly-app   1          85s
+$ kubectl get --namespace wildfly-operator wfly wildfly-app
+Name:         wildfly-app
+Namespace:    wildfly-operator
+API Version:  wildfly.org/v1beta1
+Kind:         WildFlyServer
+Metadata:
+  ...
+Spec:
+  Application Image:  myapp
+  Replicas:           1
+Status:
+  Replicas:  1
+Events:      <none>
+```
 
-$ kubectl get wfly/wildfly-example
+# Clean up the Cluster
+
+You can delete the application example with:
 
 ```
-# Clean up the Cluster
+kubectl delete -f examples/
+```
+
+Then the Operator can be deleted with:
 
 ```
 kubectl delete -f deploy/
-kubectl delete -f examples/
 ```
