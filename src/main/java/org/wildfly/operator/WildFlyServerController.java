@@ -39,7 +39,7 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
     @Override
     public UpdateControl<WildFlyServer> createOrUpdateResource(
             WildFlyServer wildflyServer, Context<WildFlyServer> context) {
-        log.info("Execution createOrUpdateResource for: {}", wildflyServer.getMetadata().getName());
+        log.info("createOrUpdateResource for {}", wildflyServer.getMetadata().getName());
 
         StatefulSets.createOrUpdate(kubernetesClient, wildflyServer);
         Services.createOrUpdateLoadBalancer(kubernetesClient, wildflyServer);

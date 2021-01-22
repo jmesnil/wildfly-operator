@@ -49,12 +49,12 @@ __  ____  __  _____   ___  __ ____  ______
  --/ __ \/ / / / _ | / _ \/ //_/ / / / __/
  -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \
 --\___\_\____/_/ |_/_/|_/_/|_|\____/___/
-2021-01-22 16:21:53,692 INFO  [io.quarkus] (main) wildfly-operator 1.0.0-SNAPSHOT on JVM (powered by Quarkus 1.11.0.Final) started in 1.877s. Listening on: http://0.0.0.0:8080
-2021-01-22 16:21:53,696 INFO  [io.quarkus] (main) Profile prod activated.
-2021-01-22 16:21:53,696 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, kubernetes-client, operator-sdk, smallrye-health]
-2021-01-22 16:21:54,867 INFO  [io.jav.ope.Operator] (main) Registered Controller: 'WildFlyServerController_ClientProxy' for CRD: 'class org.wildfly.operator.WildFlyServer' for namespaces: [all/client namespace]
-Watching for CustomResourceDefinition:wildflyservers.wildfly.org
-Using Custom Resource Classclass org.wildfly.operator.WildFlyServer
+2021-01-22 16:41:40,386 INFO  [io.quarkus] (main) wildfly-operator 1.0.0-SNAPSHOT on JVM (powered by Quarkus 1.11.0.Final) started in 2.073s. Listening on: http://0.0.0.0:8080
+2021-01-22 16:41:40,390 INFO  [io.quarkus] (main) Profile prod activated.
+2021-01-22 16:41:40,390 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, kubernetes-client, operator-sdk, smallrye-health]
+2021-01-22 16:41:41,468 INFO  [io.jav.ope.Operator] (main) Registered Controller: 'WildFlyServerController_ClientProxy' for CRD: 'class org.wildfly.operator.WildFlyServer' for namespaces: [all/client namespace]
+2021-01-22 16:41:41,469 INFO  [org.wil.ope.WildFlyServerController] (main) Watching for CustomResourceDefinition: wildflyservers.wildfly.org
+2021-01-22 16:41:41,469 INFO  [org.wil.ope.WildFlyServerController] (main) Using Custom Resource class org.wildfly.operator.WildFlyServer
 ```
 
 # Deploy the example
@@ -68,9 +68,7 @@ You can see in the logs of the WildFly Operator that the resource has been taken
 
 ```
 ...
-2021-01-22 15:10:19,169 INFO  [io.jav.ope.pro.EventDispatcher] (EventHandler-org.wildfly.operator.WildFlyServerController_ClientProxy) Adding finalizer to ObjectMeta(annotations={kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"wildfly.org/v1beta1","kind":"WildFlyServer","metadata":{"annotations":{},"name":"wildfly-app","namespace":"wildfly-operator"},"spec":{"applicationImage":"myapp","replicas":1}}
-}, clusterName=null, creationTimestamp=2021-01-22T15:10:18Z, deletionGracePeriodSeconds=null, deletionTimestamp=null, finalizers=[], generateName=null, generation=1, labels=null, managedFields=[ManagedFieldsEntry(apiVersion=wildfly.org/v1beta1, fieldsType=FieldsV1, fieldsV1=FieldsV1(additionalProperties={f:metadata={f:annotations={.={}, f:kubectl.kubernetes.io/last-applied-configuration={}}}, f:spec={.={}, f:applicationImage={}, f:replicas={}}}), manager=kubectl-client-side-apply, operation=Update, time=2021-01-22T15:10:18Z, additionalProperties={})], name=wildfly-app, namespace=wildfly-operator, ownerReferences=[], resourceVersion=659, selfLink=null, uid=e7f37ec8-b461-492a-98a7-c7632611bd9c, additionalProperties={})
-2021-01-22 15:10:19,217 WARN  [io.fab.kub.cli.int.VersionUsageUtils] (EventHandler-org.wildfly.operator.WildFlyServerController_ClientProxy) The client is using resource type 'wildflyservers' with unstable version 'v1beta1'
+2021-01-22 16:42:26,361 INFO  [org.wil.ope.WildFlyServerController] (EventHandler-org.wildfly.operator.WildFlyServerController_ClientProxy) createOrUpdateResource for wildfly-app
 ...
 ```
 

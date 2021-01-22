@@ -29,9 +29,13 @@ import io.javaoperatorsdk.operator.api.config.ConfigurationService;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @QuarkusMain
 public class WildFlyOperator implements QuarkusApplication {
+
+    private static final Logger log = LoggerFactory.getLogger(WildFlyServerController.class);
 
     @Inject
     KubernetesClient client;
@@ -51,8 +55,8 @@ public class WildFlyOperator implements QuarkusApplication {
         WildFlyServerController controller = new WildFlyServerController(client);
         final var config = configuration.getConfigurationFor(controller);
 
-        System.out.println("Watching for CustomResourceDefinition:" + config.getCRDName());
-        System.out.println("Using Custom Resource Class" + config.getCustomResourceClass());
+        log.info("Watching for CustomResourceDefinition: {}", config.getCRDName());
+        log.info("Using Custom Resource {}", config.getCustomResourceClass());
 
         Quarkus.waitForExit();
         return 0;
