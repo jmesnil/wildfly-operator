@@ -7,6 +7,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wildfly-operator
+  namespace: wildfly-operator
 spec:
   selector:
     matchLabels:
@@ -19,7 +20,7 @@ spec:
       labels:
         app: wildfly-operator
     spec:
-      serviceAccount: mwildfly-operator # specify the ServiceAccount under which's RBAC persmissions the operator will be executed under
+      serviceAccount: wildfly-operator # specify the ServiceAccount under which's RBAC persmissions the operator will be executed under
       containers:
         - name: operator
           image: quay.io/jmesnil/wildfly-java-operator:latest

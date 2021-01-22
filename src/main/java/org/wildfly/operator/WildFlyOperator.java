@@ -37,9 +37,6 @@ public class WildFlyOperator implements QuarkusApplication {
     KubernetesClient client;
 
     @Inject
-    Operator operator;
-
-    @Inject
     ConfigurationService configuration;
 
     public static void main(String... args) {
@@ -48,7 +45,8 @@ public class WildFlyOperator implements QuarkusApplication {
 
     @Override
     public int run(String... args) throws Exception {
-        final var config = configuration.getConfigurationFor(new CustomServiceController(client));
+        CustomServiceController controller = new CustomServiceController(client);
+        final var config = configuration.getConfigurationFor(controller);
         System.out.println("CR class: " + config.getCustomResourceClass());
 
         Quarkus.waitForExit();
