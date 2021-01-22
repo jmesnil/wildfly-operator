@@ -1,7 +1,8 @@
 apiVersion: wildfly.org/v1beta1
 kind: WildFlyServer
 metadata:
-  name: custom-service1
+  name: wildfly-app
+  namespace: wildfly-operator
 spec:
-  name: testservice1
-  label: testlabel
+  applicationImage: myapp
+  replicas: 1

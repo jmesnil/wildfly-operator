@@ -37,6 +37,9 @@ public class WildFlyOperator implements QuarkusApplication {
     KubernetesClient client;
 
     @Inject
+    Operator operator;
+
+    @Inject
     ConfigurationService configuration;
 
     public static void main(String... args) {
@@ -45,9 +48,13 @@ public class WildFlyOperator implements QuarkusApplication {
 
     @Override
     public int run(String... args) throws Exception {
-        CustomServiceController controller = new CustomServiceController(client);
+        WildFlyServerController controller = new WildFlyServerController(client);
         final var config = configuration.getConfigurationFor(controller);
+        System.out.println("config = " + config);
+
         System.out.println("CR class: " + config.getCustomResourceClass());
+        System.out.println("CRD Name = " + config.getCRDName());
+        System.out.println("Config Name = " + config.getName());
 
         Quarkus.waitForExit();
         return 0;

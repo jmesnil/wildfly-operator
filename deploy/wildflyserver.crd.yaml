@@ -11,8 +11,37 @@ spec:
     shortNames:
       - wfly
     singular: wildflyserver
+  scope: Namespaced
+
   versions:
     - name: v1beta1
       served: true
       storage: true
-  scope: Namespaced
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - applicationImage
+                - replicas
+              properties:
+                applicationImage:
+                  type: string
+                replicas:
+                  type: integer
+            status:
+              type: object
+              required:
+                - replicas
+              properties:
+                replicas:
+                  type: integer
+      additionalPrinterColumns:
+        - name: Replicas
+          type: integer
+          jsonPath: .status.replicas
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

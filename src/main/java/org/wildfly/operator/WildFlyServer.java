@@ -7,4 +7,4 @@ import io.fabric8.kubernetes.model.annotation.Version;
 
 @Group("wildfly.org")
 @Version("v1beta1")
-public class CustomService extends CustomResource<ServiceSpec, Void> implements Namespaced {}
+public class WildFlyServer extends CustomResource<WildFlyServerSpec, WildFlyServerStatus> implements Namespaced {}
