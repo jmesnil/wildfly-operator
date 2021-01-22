@@ -4,5 +4,5 @@ metadata:
   name: wildfly-app
   namespace: wildfly-operator
 spec:
-  applicationImage: myapp
+  applicationImage: quay.io/wildfly-quickstarts/wildfly-operator-quickstart:18.0
   replicas: 1

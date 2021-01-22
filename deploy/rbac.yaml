@@ -32,8 +32,21 @@ rules:
       - ""
     resources:
       - services
+      - services/finalizers
     verbs:
       - "*"
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
 ---
 apiVersion: v1
 kind: ServiceAccount

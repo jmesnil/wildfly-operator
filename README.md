@@ -95,6 +95,24 @@ Status:
 Events:      <none>
 ```
 
+To see the application being deployed, you can watch the pods:
+
+```
+$ kubectl --namespace wildfly-operator get -w pods
+NAME                                READY   STATUS              RESTARTS   AGE
+wildfly-app-0                       0/1     ContainerCreating   0          2m46s
+wildfly-operator-648dff6c6f-wgwxw   1/1     Running             0          3m19s
+wildfly-app-0                       1/1     Running             0          3m30s
+```
+
+and look at the logs of the WildFly application with `$kubectl --namespace wildfly-operator logs -f wildfly-app-0`
+
+Finally, you can query the application:
+
+```
+$ curl $(minikube service wildfly-app-loadbalancer --url)
+```
+
 # Clean up the Cluster
 
 You can delete the application example with:

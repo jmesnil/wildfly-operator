@@ -21,13 +21,13 @@
  */
 package org.wildfly.operator.resources;
 
+import static org.wildfly.operator.WildFlyServerController.labelsFor;
 import static org.wildfly.operator.resources.Resources.ownedBy;
 
-import java.util.Collections;
-
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,25 +37,34 @@ public class Services {
 
     private static final Logger log = LoggerFactory.getLogger(Services.class);
 
-    public static void createOrUpdate(KubernetesClient client, WildFlyServer wildflyServer) {
-        log.info("Execution Services.createOrUpdate for: {}", wildflyServer.getMetadata().getName());
+    public static void createOrUpdateLoadBalancer(KubernetesClient client, WildFlyServer wildflyServer) {
+        log.info("Execution Services.createOrUpdateLoadBalancer for: {}", wildflyServer.getMetadata().getName());
 
-        ServicePort servicePort = new ServicePort();
-        servicePort.setPort(8080);
-        ServiceSpec serviceSpec = new ServiceSpec();
-        serviceSpec.setPorts(Collections.singletonList(servicePort));
+        createOrUpdate(client, wildflyServer,
+                wildflyServer.getMetadata().getName() + "-loadbalancer",
+                new ServiceSpecBuilder()
+                        .withType("LoadBalancer")
+                        .withSelector(labelsFor(wildflyServer.getMetadata().getName()))
+                        .withPorts(
+                                new ServicePortBuilder()
+                                        .withName("http")
+                                        .withPort(8080)
+                                        .build())
+                        .build());
+    }
 
-        client
-                .services()
+    private static void createOrUpdate(KubernetesClient client, WildFlyServer wildflyServer, String serviceName, ServiceSpec spec) {
+        client.services()
                 .inNamespace(wildflyServer.getMetadata().getNamespace())
                 .createOrReplace(
                         new ServiceBuilder()
                                 .withNewMetadata()
-                                .withName(wildflyServer.getMetadata().getName())
-                                .addToLabels("testLabel", "" + wildflyServer.getSpec().getApplicationImage())
+                                .withName(serviceName)
+                                .withNamespace(wildflyServer.getMetadata().getNamespace())
                                 .withOwnerReferences(ownedBy(wildflyServer))
+                                .addToLabels(labelsFor(wildflyServer.getMetadata().getName()))
                                 .endMetadata()
-                                .withSpec(serviceSpec)
+                                .withSpec(spec)
                                 .build());
     }
 }
