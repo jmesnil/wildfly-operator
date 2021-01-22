@@ -28,16 +28,23 @@ spec:
                 - replicas
               properties:
                 applicationImage:
+                  description: applicationImage is the name of the application image to
+                    be deployed
                   type: string
                 replicas:
+                  description: replicas is the desired number of replicas for the application
                   type: integer
+                  format: int32
+                  minimum: 0
             status:
               type: object
               required:
                 - replicas
               properties:
                 replicas:
+                  description: replicas is the actual number of replicas for the application
                   type: integer
+                  format: int32
       additionalPrinterColumns:
         - name: Replicas
           type: integer
