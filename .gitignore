@@ -1,83 +1,60 @@
-/openapi-gen
-/operator-sdk
-/operator-sdk-e2e-tests
-
-# Temporary Build Files
-build/_output
-build/_test
-# Created by https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
-### Emacs ###
-# -*- mode: gitignore; -*-
+# ignore .svn metadata files
+.svn
+# ignore Maven generated target folders
+~
+target
+# ignore downloaded maven
+/tools/maven
+/tools/maven.zip
+/tools/wrapper
+# ignore eclipse files
+.project
+.classpath
+.settings
+.metadata
+.checkstyle
+# ignore m2e annotation processing files
+.factorypath
+# ignore IDEA files
+*.iml
+*.ipr
+*.iws
+.idea
+# ignore NetBeans files
+nbactions.xml
+nb-configuration.xml
+catalog.xml
+#
+maven-ant-tasks.jar
+test-output
+transaction.log
+# vim files
+*.swp
+/.gitk-tmp.*
+atlassian-ide-plugin.xml
+# temp files
 *~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
-# Org-mode
-.org-id-locations
-*_archive
-# flymake-mode
-*_flymake.*
-# eshell files
-/eshell/history
-/eshell/lastdir
-# elpa packages
-/elpa/
-# reftex files
-*.rel
-# AUCTeX auto folder
-/auto/
-# cask packages
-.cask/
-dist/
-# Flycheck
-flycheck_*.el
-# server auth directory
-/server/
-# projectiles files
-.projectile
-projectile-bookmarks.eld
-# directory configuration
-.dir-locals.el
-# saveplace
-places
-# url cache
-url/cache/
-# cedet
-ede-projects.el
-# smex
-smex-items
-# company-statistics
-company-statistics-cache.el
-# anaconda-mode
-anaconda-mode/
-### Go ###
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-# Test binary, build with 'go test -c'
-*.test
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-### Vim ###
-# swap
-.sw[a-p]
-.*.sw[a-p]
-# session
-Session.vim
-# temporary
-.netrwhist
-# auto-generated tag files
-tags
-### VisualStudioCode ###
-.vscode/*
-.history
-# End of https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
-## idea ##
-.idea/
+# maven versions plugin
+pom.xml.versionsBackup
+# hprof dumps
+/*.hprof
+# ignore 'randomly' strewn around logs
+server.log
+# ignore java crashes
+hs_err_pid*.log
+# H2 databases produced by tests
+*.h2.db
+# JBoss transaction generated files
+PutObjectStoreDirHere
+# ignore mvn-rpmbuild repo
+/.m2
+# ignore eap repo
+local-repo-eap
+# ignore the build metadata created by the build metadata plugin
+build.metadata
+#These keep hanging around
+arquillian/*/server.log*
+client/shade/dependency-reduced-pom.xml
+
+#OS X stuff
+.DS_Store

@@ -1,0 +1,7 @@
+apiVersion: wildfly.org/v1beta1
+kind: WildFlyServer
+metadata:
+  name: custom-service1
+spec:
+  name: testservice1
+  label: testlabel
