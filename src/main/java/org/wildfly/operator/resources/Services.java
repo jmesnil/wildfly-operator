@@ -53,6 +53,22 @@ public class Services {
                         .build());
     }
 
+    public static void createOrUpdateAdmin(KubernetesClient client, WildFlyServer wildflyServer) {
+        log.info("Execution Services.createOrUpdateAdmin for: {}", wildflyServer.getMetadata().getName());
+
+        createOrUpdate(client, wildflyServer,
+                wildflyServer.getMetadata().getName() + "-admin",
+                new ServiceSpecBuilder()
+                        .withType("ClusterIP")
+                        .withSelector(labelsFor(wildflyServer.getMetadata().getName()))
+                        .withPorts(
+                                new ServicePortBuilder()
+                                        .withName("admin")
+                                        .withPort(9990)
+                                        .build())
+                        .build());
+    }
+
     private static void createOrUpdate(KubernetesClient client, WildFlyServer wildflyServer, String serviceName, ServiceSpec spec) {
         client.services()
                 .inNamespace(wildflyServer.getMetadata().getNamespace())

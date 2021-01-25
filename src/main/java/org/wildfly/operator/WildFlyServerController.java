@@ -2,6 +2,7 @@ package org.wildfly.operator;
 
 import static java.util.Objects.requireNonNullElse;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import io.javaoperatorsdk.operator.api.ResourceController;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wildfly.operator.resources.ServiceMonitors;
 import org.wildfly.operator.resources.Services;
 import org.wildfly.operator.resources.StatefulSets;
 
@@ -41,12 +43,18 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
             WildFlyServer wildflyServer, Context<WildFlyServer> context) {
         log.info("createOrUpdateResource for {}", wildflyServer.getMetadata().getName());
 
+        if (wildflyServer.getStatus() == null) {
+            wildflyServer.setStatus(new WildFlyServerStatus());
+        }
+
         StatefulSets.createOrUpdate(kubernetesClient, wildflyServer);
         Services.createOrUpdateLoadBalancer(kubernetesClient, wildflyServer);
-
-        WildFlyServerStatus status = requireNonNullElse(wildflyServer.getStatus(), new WildFlyServerStatus());
-        status.setReplicas(wildflyServer.getSpec().getReplicas());
-        wildflyServer.setStatus(status);
+        Services.createOrUpdateAdmin(kubernetesClient, wildflyServer);
+        try {
+            ServiceMonitors.createOrUpdateServiceMonitor(kubernetesClient, wildflyServer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         return UpdateControl.updateCustomResource(wildflyServer);
     }
@@ -56,6 +64,6 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
         labels.put("app.kubernetes.io/name", wildflyServerName);
         labels.put("app.kubernetes.io/managed-by","wildfly-operator");
         labels.put("app.kubernetes.io/runtime", "wildfly");
-	return labels;
+        return labels;
     }
 }

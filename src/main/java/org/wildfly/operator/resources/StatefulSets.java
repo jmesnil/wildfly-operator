@@ -29,6 +29,7 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -37,10 +38,9 @@ import org.wildfly.operator.WildFlyServer;
 public class StatefulSets {
 
     public static void createOrUpdate(KubernetesClient client, WildFlyServer wildflyServer) {
-
         Map<String, String> labels = labelsFor(wildflyServer.getMetadata().getName());
 
-        client.apps().statefulSets()
+        StatefulSet statefulSet = client.apps().statefulSets()
                 .inNamespace(wildflyServer.getMetadata().getNamespace())
                 .createOrReplace(
                         new StatefulSetBuilder()
@@ -78,5 +78,6 @@ public class StatefulSets {
                                         .build())
                                 .build());
 
+        wildflyServer.getStatus().setReplicas(statefulSet.getStatus().getReplicas());
     }
 }
