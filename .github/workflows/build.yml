@@ -43,4 +43,4 @@ jobs:
           kubernetes version: v1.20.0
           driver: docker
       - name: Run integration tests
-        run: mvn -B package -P no-unit-tests -Dquarkus.container-image.push=false --file pom.xml
+        run: mvn -B package -P integration-tests -Dquarkus.container-image.push=false --file pom.xml
