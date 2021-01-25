@@ -70,7 +70,7 @@ public class SimpleWildFlyServerIT {
 
     void awaitStatusUpdated(String name, int expectedReplicas) {
         await("cr status updated")
-                .atMost(5, TimeUnit.SECONDS)
+                .atMost(10, TimeUnit.SECONDS)
                 .untilAsserted(
                         () -> {
                             var wfly = (WildFlyServer) integrationTestSupport.getCustomResource(name);
