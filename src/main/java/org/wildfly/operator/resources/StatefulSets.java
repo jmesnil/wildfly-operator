@@ -78,6 +78,9 @@ public class StatefulSets {
                                         .build())
                                 .build());
 
-        wildflyServer.getStatus().setReplicas(statefulSet.getStatus().getReplicas());
+        // FIXME the wfly resource should be updated based on the statefulset .status.replicas
+        // however the operator does not watch for statefulset resources owned by the wfly and
+        // is not called whenever the statefulset is updated
+        wildflyServer.getStatus().setReplicas(statefulSet.getSpec().getReplicas());
     }
 }

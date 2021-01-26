@@ -52,7 +52,7 @@ public class SimpleWildFlyServerIT {
     public void createSimpleWildFlyServer() {
         integrationTestSupport.teardownIfSuccess(
                 () -> {
-                    final var applicationImage = "my-app:latest";
+                    final var applicationImage = "quay.io/wildfly-quickstarts/wildfly-operator-quickstart:18.0";
                     final var replicas = 1;
                     WildFlyServer resource = WildFlyServerSupport.create("wildfly-" + UUID.randomUUID().toString(), applicationImage, replicas);
                     integrationTestSupport.createResource(resource);
