@@ -3,8 +3,8 @@ name: Push Tag to Container Registry
 
 env:
   REGISTRY: quay.io
-  REGISTRY_USER: "wildfly+github_actions"
-  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_ROBOT_PASSWORD }}
+  REGISTRY_USER: "jmesnil"
+  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
 
 # Controls when the action will run. 
 on:
@@ -29,4 +29,4 @@ jobs:
           username: ${{ env.REGISTRY_USER }}
           password: ${{ env.REGISTRY_PASSWORD }}
       - name: Build and Push Image Tag
-        run: TAG=${GITHUB_REF##*/} make push
+        run: echo push ${GITHUB_REF##*/}
