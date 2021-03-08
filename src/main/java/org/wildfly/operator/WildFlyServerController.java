@@ -1,12 +1,10 @@
 package org.wildfly.operator;
 
-import static java.util.Objects.requireNonNullElse;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.DeleteControl;
@@ -26,10 +24,10 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
 
     public static final String KIND = "Wil";
 
-    private final KubernetesClient kubernetesClient;
+    private final OpenShiftClient client;
 
-    public WildFlyServerController(KubernetesClient kubernetesClient) {
-        this.kubernetesClient = kubernetesClient;
+    public WildFlyServerController(OpenShiftClient client) {
+        this.client = client;
     }
 
     @Override
@@ -47,11 +45,11 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
             wildflyServer.setStatus(new WildFlyServerStatus());
         }
 
-        StatefulSets.createOrUpdate(kubernetesClient, wildflyServer);
-        Services.createOrUpdateLoadBalancer(kubernetesClient, wildflyServer);
-        Services.createOrUpdateAdmin(kubernetesClient, wildflyServer);
+        StatefulSets.createOrUpdate(client, wildflyServer);
+        Services.createOrUpdateLoadBalancer(client, wildflyServer);
+        Services.createOrUpdateAdmin(client, wildflyServer);
         try {
-            ServiceMonitors.createOrUpdateServiceMonitor(kubernetesClient, wildflyServer);
+            ServiceMonitors.createOrUpdateServiceMonitor(client, wildflyServer);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -89,7 +89,7 @@ public class IntegrationTestSupport {
         final var customResourceClass = config.getCustomResourceClass();
         this.crOperations = k8sClient.customResources(customResourceClass);
         operator = new Operator(k8sClient, configurationService);
-        operator.registerController(controller, TEST_NAMESPACE);
+        operator.register(controller);
         log.info("Operator is running with {}", controller.getClass().getCanonicalName());
     }
 

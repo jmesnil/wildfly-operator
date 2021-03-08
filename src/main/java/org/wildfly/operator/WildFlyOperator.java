@@ -23,7 +23,7 @@ package org.wildfly.operator;
 
 import javax.inject.Inject;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import io.javaoperatorsdk.operator.Operator;
 import io.javaoperatorsdk.operator.api.config.ConfigurationService;
 import io.quarkus.runtime.Quarkus;
@@ -38,7 +38,7 @@ public class WildFlyOperator implements QuarkusApplication {
     private static final Logger log = LoggerFactory.getLogger(WildFlyServerController.class);
 
     @Inject
-    KubernetesClient client;
+    OpenShiftClient client;
 
     @Inject
     Operator operator;

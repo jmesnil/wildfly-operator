@@ -29,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -42,9 +44,9 @@ public class SimpleWildFlyServerIT {
 
     @BeforeEach
     public void initAndCleanup() {
-        KubernetesClient k8sClient = new DefaultKubernetesClient();
+        OpenShiftClient client = new DefaultOpenShiftClient();
         integrationTestSupport.initialize(
-                k8sClient, new WildFlyServerController(k8sClient), "/wildflyserver.crd.yaml");
+                client, new WildFlyServerController(client), "/wildflyserver.crd.yaml");
         integrationTestSupport.cleanup();
     }
 

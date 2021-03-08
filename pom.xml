@@ -18,7 +18,7 @@
         <version.awaitability>4.0.3</version.awaitability>
         <version.compiler-plugin>3.8.1</version.compiler-plugin>
         <version.io.fabric8>5.0.0</version.io.fabric8>
-        <version.io.javaoperatorsdk>1.7.0</version.io.javaoperatorsdk>
+        <version.io.javaoperatorsdk>1.7.3-SNAPSHOT</version.io.javaoperatorsdk>
         <version.junit>5.7.0</version.junit>
         <version.quarkus>1.11.0.Final</version.quarkus>
         <version.surefire>3.0.0-M5</version.surefire>

@@ -22,15 +22,16 @@
 package org.wildfly.operator.resources;
 
 import static org.wildfly.operator.WildFlyServerController.labelsFor;
+import static org.wildfly.operator.resources.Resources.ownedBy;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.api.model.OwnerReference;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.openshift.api.model.monitoring.v1.EndpointBuilder;
+import io.fabric8.openshift.api.model.monitoring.v1.ServiceMonitorBuilder;
+import io.fabric8.openshift.api.model.monitoring.v1.ServiceMonitorSpecBuilder;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wildfly.operator.WildFlyServer;
@@ -39,64 +40,40 @@ public class ServiceMonitors {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceMonitors.class);
 
-    public static void createOrUpdateServiceMonitor(KubernetesClient client, WildFlyServer wildflyServer) throws IOException {
+    public static void createOrUpdateServiceMonitor(OpenShiftClient client, WildFlyServer wildflyServer) throws IOException {
         log.info("Execution ServiceMonitors.createOrUpdateServiceMonitor for: {}", wildflyServer.getMetadata().getName());
 
         if (isServiceMonitorInstalled(client)) {
             Map<String, String> labels = labelsFor(wildflyServer.getMetadata().getName());
             OwnerReference ow = Resources.ownedBy(wildflyServer);
             log.info(ow.toString());
-            // create or update a ServiceMonitor that exposed WildFly Metrics on the admin /metrics
-            String rawServiceMonitor = "apiVersion: monitoring.coreos.com/v1\n" +
-                    "kind: ServiceMonitor\n" +
-                    "metadata:\n" +
-                    "  name: "+ wildflyServer.getMetadata().getName() + "\n" +
-                    "  labels:\n" +
-                    indentedLabels(labels, 4) +
-                    "spec:\n" +
-                    "  endpoints:\n" +
-                    "    - port: admin\n" +
-                    "  namespaceSelector: {}\n" +
-                    "  selector:\n" +
-                    "    matchLabels:\n" +
-                    indentedLabels(labels, 6);
-            client.customResource(serviceMonitor()).createOrReplace(wildflyServer.getMetadata().getNamespace(), rawServiceMonitor);
+            client.monitoring().serviceMonitors()
+                    .inNamespace(wildflyServer.getMetadata().getNamespace())
+                    .createOrReplace(
+                            new ServiceMonitorBuilder()
+                                    .withNewMetadata()
+                                    .withName(wildflyServer.getMetadata().getName())
+                                    .withOwnerReferences(ownedBy(wildflyServer))
+                                    .addToLabels(labels)
+                                    .endMetadata()
+                                    .withSpec(new ServiceMonitorSpecBuilder()
+                                            .withNewSelector()
+                                            .withMatchLabels(labels)
+                                            .endSelector()
+                                            .withEndpoints(
+                                                    new EndpointBuilder()
+                                                            .withPort("admin")
+                                                            .build())
+                                            .build()
+                                    )
+                                    .build());
         }
     }
 
-    private static  String indentedLabels(Map<String, String> labels, int tab) {
-        String separator = "";
-        for (int i = 0; i < tab; i++) {
-            separator += " ";
-        }
-        return labels.keySet().stream()
-                .map(k -> k + ": " + labels.get(k))
-                .collect(Collectors.joining("\n" +separator, separator, "\n"));
-    }
-
-    public static void main(String[] args) {
-        Map<String, String> labels = new HashMap<>();
-        labels.put("foo", "a");
-        labels.put("bar", "b");
-        System.out.println(indentedLabels(labels, 2));
-        System.out.println(indentedLabels(labels, 4));
-    }
-
-    public static boolean isServiceMonitorInstalled(KubernetesClient client) {
+    public static boolean isServiceMonitorInstalled(OpenShiftClient client) {
         return client.apiextensions().v1().customResourceDefinitions().list().getItems().stream().anyMatch(crd ->
                 crd.getSpec().getNames().getKind().equals("ServiceMonitor") &&
                         crd.getSpec().getGroup().equals("monitoring.coreos.com") &&
                         crd.getSpec().getVersions().stream().anyMatch(v -> v.getName().equals("v1")));
-    }
-
-    public static CustomResourceDefinitionContext serviceMonitor() {
-        CustomResourceDefinitionContext serviceMonitorDefinitionContext = new CustomResourceDefinitionContext.Builder()
-                .withName("ServiceMonitor")
-                .withGroup("monitoring.coreos.com")
-                .withVersion("v1")
-                .withPlural("servicemonitors")
-                .withScope("Namespaced")
-                .build();
-        return serviceMonitorDefinitionContext;
     }
 }
