@@ -1,2 +1,2 @@
-* xref:user-gude.adoc[]
+* xref:user-guide.adoc[]
 * xref:apis.adoc[]
