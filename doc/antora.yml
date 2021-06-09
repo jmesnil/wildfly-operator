@@ -1,5 +1,5 @@
 name: wildfly-operator
 title: Kubernetes Operator for WildFly
-version: main
+version: master
 nav:
   - modules/ROOT/pages/nav.adoc
