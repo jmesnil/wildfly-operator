@@ -14,13 +14,14 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
-        <version.assertj-core>3.18.0</version.assertj-core>
-        <version.awaitability>4.0.3</version.awaitability>
+        <version.assertj-core>3.20.2</version.assertj-core>
+        <version.awaitability>4.1.0</version.awaitability>
         <version.compiler-plugin>3.8.1</version.compiler-plugin>
-        <version.io.fabric8>5.0.0</version.io.fabric8>
-        <version.io.javaoperatorsdk>1.7.0</version.io.javaoperatorsdk>
-        <version.junit>5.7.0</version.junit>
-        <version.quarkus>1.11.0.Final</version.quarkus>
+        <version.io.fabric8>5.7.2</version.io.fabric8>
+        <version.io.javaoperatorsdk>1.9.6</version.io.javaoperatorsdk>
+        <version.junit>5.7.2</version.junit>
+        <version.quarkus>2.2.1.Final</version.quarkus>
+        <version.io.quarkiverse.operatorsdk>2.0.0.Beta5</version.io.quarkiverse.operatorsdk>
         <version.surefire>3.0.0-M5</version.surefire>
 
         <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
@@ -62,9 +63,9 @@
                 <version>${version.io.javaoperatorsdk}</version>
             </dependency>
             <dependency>
-                <groupId>io.javaoperatorsdk</groupId>
-                <artifactId>operator-framework-quarkus-extension</artifactId>
-                <version>${version.io.javaoperatorsdk}</version>
+                <groupId>io.quarkiverse.operatorsdk</groupId>
+                <artifactId>quarkus-operator-sdk</artifactId>
+                <version>${version.io.quarkiverse.operatorsdk}</version>
             </dependency>
             <dependency>
                 <groupId>io.quarkus</groupId>
@@ -96,8 +97,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.javaoperatorsdk</groupId>
-            <artifactId>operator-framework-quarkus-extension</artifactId>
+            <groupId>io.quarkiverse.operatorsdk</groupId>
+            <artifactId>quarkus-operator-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>io.javaoperatorsdk</groupId>

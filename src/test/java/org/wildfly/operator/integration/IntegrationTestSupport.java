@@ -21,20 +21,17 @@
  */
 package org.wildfly.operator.integration;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -43,16 +40,15 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.javaoperatorsdk.operator.Operator;
 import io.javaoperatorsdk.operator.api.ResourceController;
+import io.javaoperatorsdk.operator.api.config.ControllerConfiguration;
 import io.javaoperatorsdk.operator.config.runtime.DefaultConfigurationService;
 import io.javaoperatorsdk.operator.processing.retry.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wildfly.operator.WildFlyServer;
 
 public class IntegrationTestSupport {
 
     public static final String TEST_NAMESPACE = "wildfly-operator-integration-test";
-    public static final String TEST_CUSTOM_RESOURCE_PREFIX = "test-custom-resource-";
 
     private static final Logger log = LoggerFactory.getLogger(IntegrationTestSupport.class);
     private KubernetesClient k8sClient;
@@ -89,7 +85,7 @@ public class IntegrationTestSupport {
         final var customResourceClass = config.getCustomResourceClass();
         this.crOperations = k8sClient.customResources(customResourceClass);
         operator = new Operator(k8sClient, configurationService);
-        operator.registerController(controller, TEST_NAMESPACE);
+        operator.register(controller);
         log.info("Operator is running with {}", controller.getClass().getCanonicalName());
     }
 
