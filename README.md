@@ -24,7 +24,7 @@ $ mvn clean install
 # Deploy the operator on Kubernetes
 
 ```
-$ kubectl apply -f src/main/resources/
+$ kubectl apply -f deploy/
 
 namespace/wildfly-operator unchanged
 deployment.apps/wildfly-operator configured
@@ -128,5 +128,5 @@ $ kubectl delete -f examples/
 Then the Operator can be deleted with:
 
 ```
-$ kubectl delete -f src/main/resources
+$ kubectl delete -f deploy/
 ```
