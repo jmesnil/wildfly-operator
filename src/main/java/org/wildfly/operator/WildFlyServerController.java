@@ -1,10 +1,10 @@
 package org.wildfly.operator;
 
-import static java.util.Objects.requireNonNullElse;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.Context;
@@ -19,14 +19,13 @@ import org.wildfly.operator.resources.Services;
 import org.wildfly.operator.resources.StatefulSets;
 
 /** A very simple sample controller that creates a service with a label. */
-@Controller
+@Controller(namespaces = Controller.WATCH_CURRENT_NAMESPACE)
 public class WildFlyServerController implements ResourceController<WildFlyServer> {
 
     private static final Logger log = LoggerFactory.getLogger(WildFlyServerController.class);
 
-    public static final String KIND = "Wil";
-
-    private final KubernetesClient kubernetesClient;
+    @Inject
+    KubernetesClient kubernetesClient;
 
     public WildFlyServerController(KubernetesClient kubernetesClient) {
         this.kubernetesClient = kubernetesClient;
