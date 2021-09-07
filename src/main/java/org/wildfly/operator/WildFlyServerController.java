@@ -14,6 +14,7 @@ import io.javaoperatorsdk.operator.api.DeleteControl;
 import io.javaoperatorsdk.operator.api.ResourceController;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wildfly.operator.events.StatefulSetEventSource;
@@ -30,10 +31,13 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
     @Inject
     KubernetesClient kubernetesClient;
 
+    @Inject
+    OperatorConfig operatorConfig;
+
     @Override
     public void init(EventSourceManager eventSourceManager) {
         LOGGER.info("WildFlyServerController.init");
-        eventSourceManager.registerEventSource("statefulset", new StatefulSetEventSource(kubernetesClient));
+        eventSourceManager.registerEventSource("statefulset", new StatefulSetEventSource(kubernetesClient, operatorConfig));
     }
 
     @Override
@@ -51,11 +55,12 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
             wildflyServer.setStatus(new WildFlyServerStatus());
         }
 
-        StatefulSets.createOrUpdate(kubernetesClient, wildflyServer);
-        Services.createOrUpdateLoadBalancer(kubernetesClient, wildflyServer);
-        Services.createOrUpdateAdmin(kubernetesClient, wildflyServer);
+        Map<String, String> labels = operatorConfig.labelsFor(wildflyServer.getMetadata().getName());
+        StatefulSets.createOrUpdate(kubernetesClient, wildflyServer, labels);
+        Services.createOrUpdateLoadBalancer(kubernetesClient, wildflyServer, labels);
+        Services.createOrUpdateAdmin(kubernetesClient, wildflyServer, labels);
         try {
-            ServiceMonitors.createOrUpdateServiceMonitor(kubernetesClient, wildflyServer);
+            ServiceMonitors.createOrUpdateServiceMonitor(kubernetesClient, wildflyServer, labels);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -70,13 +75,5 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
         }
 
         return UpdateControl.updateCustomResourceAndStatus(wildflyServer);
-    }
-
-    public static Map<String, String> labelsFor(String wildflyServerName) {
-        Map<String, String> labels = new HashMap<>();
-        labels.put("app.kubernetes.io/name", wildflyServerName);
-        labels.put("app.kubernetes.io/managed-by","wildfly-operator");
-        labels.put("app.kubernetes.io/runtime", "wildfly");
-        return labels;
     }
 }

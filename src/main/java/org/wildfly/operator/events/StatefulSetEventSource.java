@@ -21,6 +21,8 @@
  */
 package org.wildfly.operator.events;
 
+import javax.inject.Inject;
+
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
@@ -29,15 +31,18 @@ import io.javaoperatorsdk.operator.processing.event.AbstractEventSource;
 import io.javaoperatorsdk.operator.processing.event.DefaultEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wildfly.operator.OperatorConfig;
 
 public class StatefulSetEventSource extends AbstractEventSource implements Watcher<StatefulSet> {
 
  private static final Logger log = LoggerFactory.getLogger(StatefulSetEventSource.class);
 
  private final KubernetesClient client;
+ private final OperatorConfig config;
 
- public StatefulSetEventSource(KubernetesClient client) {
+ public StatefulSetEventSource(KubernetesClient client, OperatorConfig config) {
   this.client = client;
+  this.config = config;
   registerWatch(client);
  }
 
@@ -47,8 +52,7 @@ public class StatefulSetEventSource extends AbstractEventSource implements Watch
           .apps()
           .statefulSets()
           .inAnyNamespace()
-          // FIXME make this parameterized
-          .withLabel("app.kubernetes.io/managed-by", "wildfly-operator")
+          .withLabel("app.kubernetes.io/managed-by", config.managedByLabel)
           .watch(this);
  }
 

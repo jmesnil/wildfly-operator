@@ -27,8 +27,8 @@
         <quarkus.container-image.group>jmesnil</quarkus.container-image.group>
         <quarkus.container-image.name>wildfly-java-operator</quarkus.container-image.name>
         <quarkus.container-image.tag>latest</quarkus.container-image.tag>
-        <quarkus.container-image.build>false</quarkus.container-image.build>
-        <quarkus.container-image.push>false</quarkus.container-image.push>
+        <quarkus.container-image.build>true</quarkus.container-image.build>
+        <quarkus.container-image.push>true</quarkus.container-image.push>
     </properties>
 
     <dependencyManagement>

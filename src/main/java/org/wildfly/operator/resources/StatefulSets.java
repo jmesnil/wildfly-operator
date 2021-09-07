@@ -21,7 +21,6 @@
  */
 package org.wildfly.operator.resources;
 
-import static org.wildfly.operator.WildFlyServerController.labelsFor;
 import static org.wildfly.operator.resources.Resources.ownedBy;
 
 import java.util.Map;
@@ -37,10 +36,8 @@ import org.wildfly.operator.WildFlyServer;
 
 public class StatefulSets {
 
-    public static void createOrUpdate(KubernetesClient client, WildFlyServer wildflyServer) {
-        Map<String, String> labels = labelsFor(wildflyServer.getMetadata().getName());
-
-        StatefulSet statefulSet = client.apps().statefulSets()
+    public static void createOrUpdate(KubernetesClient client, WildFlyServer wildflyServer, Map<String, String> labels) {
+        client.apps().statefulSets()
                 .inNamespace(wildflyServer.getMetadata().getNamespace())
                 .createOrReplace(
                         new StatefulSetBuilder()

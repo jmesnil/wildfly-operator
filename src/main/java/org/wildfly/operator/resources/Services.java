@@ -21,8 +21,9 @@
  */
 package org.wildfly.operator.resources;
 
-import static org.wildfly.operator.WildFlyServerController.labelsFor;
 import static org.wildfly.operator.resources.Resources.ownedBy;
+
+import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
@@ -37,14 +38,14 @@ public class Services {
 
     private static final Logger log = LoggerFactory.getLogger(Services.class);
 
-    public static void createOrUpdateLoadBalancer(KubernetesClient client, WildFlyServer wildflyServer) {
+    public static void createOrUpdateLoadBalancer(KubernetesClient client, WildFlyServer wildflyServer, Map<String, String> labels) {
         log.info("Execution Services.createOrUpdateLoadBalancer for: {}", wildflyServer.getMetadata().getName());
 
-        createOrUpdate(client, wildflyServer,
+        createOrUpdate(client, wildflyServer, labels,
                 wildflyServer.getMetadata().getName() + "-loadbalancer",
                 new ServiceSpecBuilder()
                         .withType("LoadBalancer")
-                        .withSelector(labelsFor(wildflyServer.getMetadata().getName()))
+                        .withSelector(labels)
                         .withPorts(
                                 new ServicePortBuilder()
                                         .withName("http")
@@ -53,14 +54,14 @@ public class Services {
                         .build());
     }
 
-    public static void createOrUpdateAdmin(KubernetesClient client, WildFlyServer wildflyServer) {
+    public static void createOrUpdateAdmin(KubernetesClient client, WildFlyServer wildflyServer, Map<String, String> labels) {
         log.info("Execution Services.createOrUpdateAdmin for: {}", wildflyServer.getMetadata().getName());
 
-        createOrUpdate(client, wildflyServer,
+        createOrUpdate(client, wildflyServer, labels,
                 wildflyServer.getMetadata().getName() + "-admin",
                 new ServiceSpecBuilder()
                         .withType("ClusterIP")
-                        .withSelector(labelsFor(wildflyServer.getMetadata().getName()))
+                        .withSelector(labels)
                         .withPorts(
                                 new ServicePortBuilder()
                                         .withName("admin")
@@ -69,7 +70,7 @@ public class Services {
                         .build());
     }
 
-    private static void createOrUpdate(KubernetesClient client, WildFlyServer wildflyServer, String serviceName, ServiceSpec spec) {
+    private static void createOrUpdate(KubernetesClient client, WildFlyServer wildflyServer, Map<String, String> labels, String serviceName, ServiceSpec spec) {
         client.services()
                 .inNamespace(wildflyServer.getMetadata().getNamespace())
                 .createOrReplace(
@@ -78,7 +79,7 @@ public class Services {
                                 .withName(serviceName)
                                 .withNamespace(wildflyServer.getMetadata().getNamespace())
                                 .withOwnerReferences(ownedBy(wildflyServer))
-                                .addToLabels(labelsFor(wildflyServer.getMetadata().getName()))
+                                .addToLabels(labels)
                                 .endMetadata()
                                 .withSpec(spec)
                                 .build());

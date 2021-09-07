@@ -21,8 +21,6 @@
  */
 package org.wildfly.operator.resources;
 
-import static org.wildfly.operator.WildFlyServerController.labelsFor;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,11 +37,10 @@ public class ServiceMonitors {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceMonitors.class);
 
-    public static void createOrUpdateServiceMonitor(KubernetesClient client, WildFlyServer wildflyServer) throws IOException {
+    public static void createOrUpdateServiceMonitor(KubernetesClient client, WildFlyServer wildflyServer, Map<String, String> labels) throws IOException {
         log.info("Execution ServiceMonitors.createOrUpdateServiceMonitor for: {}", wildflyServer.getMetadata().getName());
 
         if (isServiceMonitorInstalled(client)) {
-            Map<String, String> labels = labelsFor(wildflyServer.getMetadata().getName());
             OwnerReference ow = Resources.ownedBy(wildflyServer);
             log.info(ow.toString());
             // create or update a ServiceMonitor that exposed WildFly Metrics on the admin /metrics
@@ -72,14 +69,6 @@ public class ServiceMonitors {
         return labels.keySet().stream()
                 .map(k -> k + ": " + labels.get(k))
                 .collect(Collectors.joining("\n" +separator, separator, "\n"));
-    }
-
-    public static void main(String[] args) {
-        Map<String, String> labels = new HashMap<>();
-        labels.put("foo", "a");
-        labels.put("bar", "b");
-        System.out.println(indentedLabels(labels, 2));
-        System.out.println(indentedLabels(labels, 4));
     }
 
     public static boolean isServiceMonitorInstalled(KubernetesClient client) {
