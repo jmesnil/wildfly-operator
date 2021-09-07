@@ -1,8 +1,6 @@
 package org.wildfly.operator;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -14,7 +12,6 @@ import io.javaoperatorsdk.operator.api.DeleteControl;
 import io.javaoperatorsdk.operator.api.ResourceController;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wildfly.operator.events.StatefulSetEventSource;
@@ -33,6 +30,15 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
 
     @Inject
     OperatorConfig operatorConfig;
+
+    @Inject
+    StatefulSets statefulSets;
+
+    @Inject
+    Services services;
+
+    @Inject
+    ServiceMonitors serviceMonitors;
 
     @Override
     public void init(EventSourceManager eventSourceManager) {
@@ -55,21 +61,17 @@ public class WildFlyServerController implements ResourceController<WildFlyServer
             wildflyServer.setStatus(new WildFlyServerStatus());
         }
 
-        Map<String, String> labels = operatorConfig.labelsFor(wildflyServer.getMetadata().getName());
-        StatefulSets.createOrUpdate(kubernetesClient, wildflyServer, labels);
-        Services.createOrUpdateLoadBalancer(kubernetesClient, wildflyServer, labels);
-        Services.createOrUpdateAdmin(kubernetesClient, wildflyServer, labels);
+        statefulSets.createOrUpdate(wildflyServer);
+        services.createOrUpdateLoadBalancer(wildflyServer);
+        services.createOrUpdateAdmin(wildflyServer);
         try {
-            ServiceMonitors.createOrUpdateServiceMonitor(kubernetesClient, wildflyServer, labels);
+            serviceMonitors.createOrUpdateServiceMonitor(wildflyServer);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         // Update the wildflyServer status based on the statefulset status.replicas
-        StatefulSet statefulSet = kubernetesClient.apps().statefulSets()
-                .inNamespace(wildflyServer.getMetadata().getNamespace())
-                .withName(wildflyServer.getMetadata().getName())
-                .get();
+        StatefulSet statefulSet = statefulSets.get(wildflyServer);
         if (statefulSet != null && statefulSet.getStatus() !=  null) {
             wildflyServer.getStatus().setReplicas(statefulSet.getStatus().getReplicas());
         }

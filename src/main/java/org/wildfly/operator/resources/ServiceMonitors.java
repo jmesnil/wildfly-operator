@@ -22,23 +22,35 @@
 package org.wildfly.operator.resources;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wildfly.operator.OperatorConfig;
 import org.wildfly.operator.WildFlyServer;
 
+@ApplicationScoped
 public class ServiceMonitors {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceMonitors.class);
 
-    public static void createOrUpdateServiceMonitor(KubernetesClient client, WildFlyServer wildflyServer, Map<String, String> labels) throws IOException {
+    @Inject
+    KubernetesClient client;
+
+    @Inject
+    OperatorConfig config;
+
+    public void createOrUpdateServiceMonitor(WildFlyServer wildflyServer) throws IOException {
         log.info("Execution ServiceMonitors.createOrUpdateServiceMonitor for: {}", wildflyServer.getMetadata().getName());
+
+        var labels = config.labelsFor(wildflyServer.getMetadata().getName());
 
         if (isServiceMonitorInstalled(client)) {
             OwnerReference ow = Resources.ownedBy(wildflyServer);
