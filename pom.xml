@@ -29,6 +29,11 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>io.quarkiverse.operatorsdk</groupId>
+        <artifactId>quarkus-operator-sdk</artifactId>
+        <version>${quarkus-sdk.version}</version>
+      </dependency>
+      <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>kubernetes-client-bom</artifactId>
         <version>${fabric8-client.version}</version>
@@ -44,11 +49,11 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>io.quarkiverse.operatorsdk</groupId>
       <artifactId>quarkus-operator-sdk</artifactId>
-      <version>${quarkus-sdk.version}</version>
     </dependency>
   </dependencies>
 
@@ -69,6 +74,13 @@
     <plugin>
       <artifactId>maven-compiler-plugin</artifactId>
       <version>${compiler-plugin.version}</version>
+      <configuration>
+        <parameters>true</parameters>
+        <source>${maven.compiler.source}</source>
+        <target>${maven.compiler.target}</target>
+        <testSource>${maven.compiler.source}</testSource>
+        <testTarget>${maven.compiler.target}</testTarget>
+      </configuration>
     </plugin>
     </plugins>
   </build>
