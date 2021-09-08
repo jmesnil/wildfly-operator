@@ -50,23 +50,36 @@ public class WildFlyServerTest {
     }
 
     @Test
-    public void food() {
+    public void simpleWildFlyServer() {
         integrationTestSupport.teardownIfSuccess(
                 () -> {
+                    System.out.println("WildFlyServerTest.simpleWildFlyServer");
+
                     final var applicationImage = "quay.io/wildfly-quickstarts/wildfly-operator-quickstart:18.0";
                     final var replicas = 1;
                     final var wflyName = "wildfly-" + randomUUID();
-                    WildFlyServer resource = WildFlyServerSupport.create(wflyName, applicationImage, replicas);
-                    integrationTestSupport.createResource(resource);
+                    integrationTestSupport.createResource(WildFlyServerSupport.create(wflyName, applicationImage, replicas));
 
-                    awaitStatusUpdated(resource.getMetadata().getName(), replicas);
+                    awaitStatusUpdated(wflyName, replicas);
+
+                    System.out.println(1);
                     // wait for sure, there are no more events
+
+                    System.out.println(2);
                     waitXms(300);
 
-                    WildFlyServer wfly = (WildFlyServer) integrationTestSupport.getWildFlyServer(wflyName);
+                    System.out.println(3);
+
+                    var wfly = integrationTestSupport.getWildFlyServer(wflyName);
                     assertThat(wfly.getSpec().getApplicationImage()).isEqualTo(applicationImage);
                     assertThat(wfly.getSpec().getReplicas()).isEqualTo(replicas);
                     assertThat(wfly.getStatus().getReplicas()).isEqualTo(replicas);
+
+                    System.out.println("4 = " + 4);
+
+                    integrationTestSupport.deleteResource(wfly);
+
+                    System.out.println("5 = " + 5);
                 });
     }
     void awaitStatusUpdated(String name, int expectedReplicas) {

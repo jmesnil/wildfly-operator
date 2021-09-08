@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class IntegrationTestSupport {
 
-    public static final String TEST_NAMESPACE = "wildfly-operator-integration-test";
+    public static final String TEST_NAMESPACE = "default";
 
     private static final Logger log = LoggerFactory.getLogger(IntegrationTestSupport.class);
     private MixedOperation<WildFlyServer, KubernetesResourceList<WildFlyServer>, Resource<WildFlyServer>>
@@ -76,9 +76,6 @@ public class IntegrationTestSupport {
             namespaces.create(
                     new NamespaceBuilder().withNewMetadata().withName(TEST_NAMESPACE).endMetadata().build());
         }
-
-        // create or replace the WildFlyServer CRD
-        loadCRDAndApplyToCluster(crdPath);
 
         this.crOperations = k8sClient.resources(WildFlyServer.class);
         operator.register(controller);
@@ -133,33 +130,10 @@ public class IntegrationTestSupport {
     public void teardownIfSuccess(TestRun test) {
         try {
             test.run();
-
-            log.info("Deleting namespace {} and stopping operator", TEST_NAMESPACE);
-            Namespace namespace = k8sClient.namespaces().withName(TEST_NAMESPACE).get();
-            if (namespace.getStatus().getPhase().equals("Active")) {
-                k8sClient.namespaces().withName(TEST_NAMESPACE).delete();
-            }
-            await("namespace deleted")
-                    .atMost(90, SECONDS)
-                    .until(() -> k8sClient.namespaces().withName(TEST_NAMESPACE).get() == null);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         } finally {
-            k8sClient.close();
-        }
-    }
-
-    public CustomResourceDefinition loadCRDAndApplyToCluster(String classPathYaml) {
-        CustomResourceDefinition crd = loadYaml(CustomResourceDefinition.class, classPathYaml);
-        k8sClient.apiextensions().v1().customResourceDefinitions().createOrReplace(crd);
-        return crd;
-    }
-
-    private <T> T loadYaml(Class<T> clazz, String yaml) {
-        try (InputStream is = getClass().getResourceAsStream(yaml)) {
-            return Serialization.unmarshal(is, clazz);
-        } catch (IOException ex) {
-            throw new IllegalStateException("Cannot find yaml on classpath: " + yaml);
+            operator.close();
         }
     }
 
@@ -169,6 +143,10 @@ public class IntegrationTestSupport {
 
     public void createResource(WildFlyServer wildflyServer) {
         crOperations.inNamespace(TEST_NAMESPACE).create(wildflyServer);
+    }
+
+    public void deleteResource(WildFlyServer wildflyServer) {
+        crOperations.inNamespace(TEST_NAMESPACE).delete(wildflyServer);
     }
 
     public interface TestRun {
