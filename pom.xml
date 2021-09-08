@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.wildfly</groupId>
   <artifactId>wildfly-operator</artifactId>
@@ -19,6 +19,7 @@
     <fabric8-client.version>5.7.2</fabric8-client.version>
     <quarkus-sdk.version>2.0.0.Beta5</quarkus-sdk.version>
     <quarkus.version>2.2.1.Final</quarkus.version>
+    <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 
     <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
     <quarkus.container-image.group>jmesnil</quarkus.container-image.group>
@@ -55,6 +56,11 @@
       <groupId>io.quarkiverse.operatorsdk</groupId>
       <artifactId>quarkus-operator-sdk</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -70,18 +76,33 @@
             </goals>
           </execution>
         </executions>
-    </plugin>
-    <plugin>
-      <artifactId>maven-compiler-plugin</artifactId>
-      <version>${compiler-plugin.version}</version>
-      <configuration>
-        <parameters>true</parameters>
-        <source>${maven.compiler.source}</source>
-        <target>${maven.compiler.target}</target>
-        <testSource>${maven.compiler.source}</testSource>
-        <testTarget>${maven.compiler.target}</testTarget>
-      </configuration>
-    </plugin>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${compiler-plugin.version}</version>
+        <configuration>
+          <parameters>true</parameters>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+          <testSource>${maven.compiler.source}</testSource>
+          <testTarget>${maven.compiler.target}</testTarget>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire-plugin.version}</version>
+        <configuration>
+          <systemPropertyVariables>
+            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+            <maven.home>${maven.home}</maven.home>
+            <configuration>
+              <includes>
+                <include>**/*Test.java</include>
+              </includes>
+            </configuration>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
