@@ -21,13 +21,19 @@
  */
 package org.wildfly.operator;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -79,6 +85,70 @@ public class IntegrationTestSupport {
         log.info("Operator is running with {}", controller.getClass().getCanonicalName());
     }
 
+    public void cleanup() {
+        log.info("Cleaning up namespace {}", TEST_NAMESPACE);
+
+        // we depend on the actual operator from the startup to handle the finalizers and clean up
+        // resources from previous test runs
+        crOperations.inNamespace(TEST_NAMESPACE).delete(crOperations.list().getItems());
+
+        await("all CRs cleaned up")
+                .atMost(60, SECONDS)
+                .untilAsserted(
+                        () -> assertThat(crOperations.inNamespace(TEST_NAMESPACE).list().getItems()).isEmpty());
+
+        k8sClient
+                .configMaps()
+                .inNamespace(TEST_NAMESPACE)
+                .withLabel("managedBy", controller.getClass().getSimpleName())
+                .delete();
+
+        await("all config maps cleaned up")
+                .atMost(60, SECONDS)
+                .untilAsserted(
+                        () -> {
+                            assertThat(
+                                    k8sClient
+                                            .configMaps()
+                                            .inNamespace(TEST_NAMESPACE)
+                                            .withLabel("managedBy", controller.getClass().getSimpleName())
+                                            .list()
+                                            .getItems()
+                                            .isEmpty());
+                        });
+
+
+        log.info("Cleaned up namespace " + TEST_NAMESPACE);
+    }
+
+    /**
+     * Use this method to execute the cleanup of the integration test namespace only in case the test
+     * was successful. This is useful to keep the Kubernetes resources around to debug a failed test
+     * run. Unfortunately I couldn't make this work with standard JUnit methods as the @AfterAll
+     * method doesn't know if the tests succeeded or not.
+     *
+     * @param test The code of the actual test.
+     * @throws Exception if the test threw an exception.
+     */
+    public void teardownIfSuccess(TestRun test) {
+        try {
+            test.run();
+
+            log.info("Deleting namespace {} and stopping operator", TEST_NAMESPACE);
+            Namespace namespace = k8sClient.namespaces().withName(TEST_NAMESPACE).get();
+            if (namespace.getStatus().getPhase().equals("Active")) {
+                k8sClient.namespaces().withName(TEST_NAMESPACE).delete();
+            }
+            await("namespace deleted")
+                    .atMost(90, SECONDS)
+                    .until(() -> k8sClient.namespaces().withName(TEST_NAMESPACE).get() == null);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        } finally {
+            k8sClient.close();
+        }
+    }
+
     public CustomResourceDefinition loadCRDAndApplyToCluster(String classPathYaml) {
         CustomResourceDefinition crd = loadYaml(CustomResourceDefinition.class, classPathYaml);
         k8sClient.apiextensions().v1().customResourceDefinitions().createOrReplace(crd);
@@ -93,4 +163,16 @@ public class IntegrationTestSupport {
         }
     }
 
+    public WildFlyServer getWildFlyServer(String name) {
+        return crOperations.inNamespace(TEST_NAMESPACE).withName(name).get();
+    }
+
+    public void createResource(WildFlyServer wildflyServer) {
+        crOperations.inNamespace(TEST_NAMESPACE).create(wildflyServer);
+    }
+
+    public interface TestRun {
+
+        void run() throws Exception;
+    }
 }

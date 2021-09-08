@@ -21,6 +21,14 @@
  */
 package org.wildfly.operator;
 
+import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -38,10 +46,49 @@ public class WildFlyServerTest {
     public void initAndCleanup() {
         System.out.println("integrationTestSupport = " + integrationTestSupport);
         integrationTestSupport.initialize("/wildfly.org_wildflyservers_crd.yaml");
+        integrationTestSupport.cleanup();
     }
 
     @Test
     public void food() {
-        System.out.println("integrationTestSupport = " + integrationTestSupport);
+        integrationTestSupport.teardownIfSuccess(
+                () -> {
+                    final var applicationImage = "quay.io/wildfly-quickstarts/wildfly-operator-quickstart:18.0";
+                    final var replicas = 1;
+                    final var wflyName = "wildfly-" + randomUUID();
+                    WildFlyServer resource = WildFlyServerSupport.create(wflyName, applicationImage, replicas);
+                    integrationTestSupport.createResource(resource);
+
+                    awaitStatusUpdated(resource.getMetadata().getName(), replicas);
+                    // wait for sure, there are no more events
+                    waitXms(300);
+
+                    WildFlyServer wfly = (WildFlyServer) integrationTestSupport.getWildFlyServer(wflyName);
+                    assertThat(wfly.getSpec().getApplicationImage()).isEqualTo(applicationImage);
+                    assertThat(wfly.getSpec().getReplicas()).isEqualTo(replicas);
+                    assertThat(wfly.getStatus().getReplicas()).isEqualTo(replicas);
+                });
     }
+    void awaitStatusUpdated(String name, int expectedReplicas) {
+        await("cr status updated")
+                .atMost(30, SECONDS)
+                .untilAsserted(
+                        () -> {
+                            var wfly = (WildFlyServer) integrationTestSupport.getWildFlyServer(name);
+                            assertThat(wfly.getMetadata().getFinalizers()).hasSize(1);
+                            assertThat(wfly).isNotNull();
+                            assertThat(wfly.getStatus()).isNotNull();
+                            assertThat(wfly.getStatus().getReplicas()).isEqualTo(expectedReplicas);
+                        });
+    }
+
+
+    public static void waitXms(int x) {
+        try {
+            Thread.sleep(x);
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
 }
