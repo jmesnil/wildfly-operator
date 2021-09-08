@@ -1,0 +1,12 @@
+domain: wildfly.org
+layout:
+- quarkus.javaoperatorsdk.io/v1-alpha
+projectName: wildfly-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: wildfly.org
+  kind: WildFlyServer
+  version: v1alpha1
+version: "3"
