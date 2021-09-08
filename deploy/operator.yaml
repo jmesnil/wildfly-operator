@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: wildfly-operator
+    app.kubernetes.io/version: latest
+  name: wildfly-operator
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: wildfly-operator
+    app.kubernetes.io/version: latest
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: wildfly-operator
+    app.kubernetes.io/version: latest
+  name: wildfly-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wildfly-operator
+      app.kubernetes.io/version: latest
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wildfly-operator
+        app.kubernetes.io/version: latest
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: quay.io/jmesnil/wildfly-operator:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/live
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+          name: wildfly-operator
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+      serviceAccount: wildfly-operator
