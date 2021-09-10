@@ -42,5 +42,7 @@ jobs:
           driver: docker
       - name: Run unit tests
         run: mvn -B test --file pom.xml
+      - name: Load WildFlyServer CRD
+        run: kubectl apply -f src/main/resources/wildfly.org_wildflyservers_crd.yaml
       - name: Run integration tests
         run: mvn -B package -P integration-tests -Dquarkus.container-image.push=false --file pom.xml
