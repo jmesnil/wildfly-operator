@@ -33,8 +33,8 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.wildfly.operator.OperatorConfig;
 import org.wildfly.operator.WildFlyServer;
+import org.wildfly.operator.OperatorConfig;
 
 @ApplicationScoped
 public class StatefulSets {

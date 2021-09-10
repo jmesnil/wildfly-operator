@@ -19,11 +19,11 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.wildfly.operator;
-
-import static org.wildfly.operator.IntegrationTestSupport.TEST_NAMESPACE;
+package org.wildfly.operator.integration;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import org.wildfly.operator.WildFlyServer;
+import org.wildfly.operator.WildFlyServerSpec;
 
 public class WildFlyServerSupport {
 
@@ -32,7 +32,7 @@ public class WildFlyServerSupport {
         resource.setMetadata(
                 new ObjectMetaBuilder()
                         .withName(name)
-                        .withNamespace(TEST_NAMESPACE)
+                        .withNamespace(IntegrationTestSupport.TEST_NAMESPACE)
                         .build());
         resource.setKind("WildFlyServer");
         resource.setSpec(new WildFlyServerSpec());

@@ -19,25 +19,22 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.wildfly.operator;
+package org.wildfly.operator.integration;
 
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import javax.inject.Inject;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.wildfly.operator.WildFlyServer;
 
 @QuarkusTest
-public class WildFlyServerTest {
+public class WildFlyServerIT {
 
     @Inject
     IntegrationTestSupport integrationTestSupport;

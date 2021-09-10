@@ -33,8 +33,8 @@ import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wildfly.operator.OperatorConfig;
 import org.wildfly.operator.WildFlyServer;
+import org.wildfly.operator.OperatorConfig;
 
 @ApplicationScoped
 public class Services {
