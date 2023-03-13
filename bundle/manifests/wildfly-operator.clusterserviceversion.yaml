@@ -95,7 +95,14 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 20Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
               serviceAccountName: wildfly-operator
+              securityContext:
+                runAsNonRoot: true
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:

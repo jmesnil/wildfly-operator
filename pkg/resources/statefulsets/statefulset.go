@@ -56,6 +56,12 @@ func NewStatefulSet(w *wildflyv1alpha1.WildFlyServer, labels map[string]string, 
 		wildflyImageTypeAnnotation = resources.ImageTypeBootable
 	}
 
+	allowPrivilegeEscalation := new(bool)
+	*allowPrivilegeEscalation = false
+
+	runAsNonRoot := new(bool)
+	*runAsNonRoot = true
+
 	statefulSet := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -119,6 +125,17 @@ func NewStatefulSet(w *wildflyv1alpha1.WildFlyServer, labels map[string]string, 
 	// if the user specified the securityContext directive propagate it to the container (required for HPA).
 	if w.Spec.SecurityContext != nil {
 		statefulSet.Spec.Template.Spec.Containers[0].SecurityContext = *&w.Spec.SecurityContext
+	} else {
+		// otherwise, use a default security context without any security priviledges
+		statefulSet.Spec.Template.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
+			AllowPrivilegeEscalation: allowPrivilegeEscalation,
+			Capabilities:             &corev1.Capabilities{
+				Drop: []corev1.Capability{
+					"ALL",
+				},
+			},
+			RunAsNonRoot: runAsNonRoot,
+		}
 	}
 
 	if len(w.Spec.EnvFrom) > 0 {

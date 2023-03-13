@@ -68,6 +68,8 @@ type WildFlyServerSpec struct {
 	// More info: https://pkg.go.dev/k8s.io/api@v0.18.14/core/v1#ResourceRequirements
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 	// SecurityContext
+	// If omitted, a default security context is created to deploy the application in non-root user without priviledges
+	// escalation and all security capabilities dropped.
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
 }
 
